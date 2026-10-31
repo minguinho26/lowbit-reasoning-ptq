@@ -32,6 +32,7 @@
 - vision/audio 부분과 lm_head는 양자화하지 않는다. 평가는 텍스트 전용으로 띄운다(vLLM language_model_only).
 - Qwen3.5의 Gated DeltaNet 투영(linear_attn)은 microscale 포맷과 호환되지 않아 llm-compressor 예제에서도 제외한다. 공정한 비교를 위해 모든 포맷에서 같은 층을 제외한다.
 - 모델별로 실제로 양자화된 파라미터 비율을 기록해 결과 표에 같이 적는다.
+- KV cache는 모든 설정에서 BF16으로 둔다(W4A4KV16, W2A16KV16). 양자화 대상은 Linear 층의 가중치와 입력뿐이다. 2504.04823의 4비트 weight-activation 결과는 KV까지 4비트(W4A4KV4)라 직접 비교하지 않는다.
 
 ## 4. 포맷 × 알고리즘 × calibration
 
