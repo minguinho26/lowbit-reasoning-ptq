@@ -1,0 +1,114 @@
+# 실험 설정. 모든 스크립트가 이 파일 하나를 읽는다.
+# 실행 단위(run) 이름 규칙: <model>__<format>[__<algorithm>__<calibration>]
+#   예) qwen35-4b__bf16, qwen35-4b__nvfp4__gptq__trace, ministral3-8b__w2a16__rtn
+
+paths:
+  workspace: /workspace          # 환경변수 WS로 덮어쓸 수 있음
+  subdirs:
+    models: models               # 원본(<model>__bf16)과 양자화 체크포인트
+    calib: calib                 # calibration trace와 토큰 윈도우
+    results: results             # 평가, 속도, 분석 결과
+  venv_quant: venv_quant
+  venv_serve: venv_serve
+
+models:
+  qwen35-4b:
+    hf_id: Qwen/Qwen3.5-4B
+    family: qwen3.5
+    scale: 4B
+    multimodal: true
+    ignore: ["re:.*lm_head", "re:.*visual.*", "re:.*linear_attn.*"]
+    chat_template_kwargs: {enable_thinking: true}
+  qwen35-9b:
+    hf_id: Qwen/Qwen3.5-9B
+    family: qwen3.5
+    scale: 8B
+    multimodal: true
+    ignore: ["re:.*lm_head", "re:.*visual.*", "re:.*linear_attn.*"]
+    chat_template_kwargs: {enable_thinking: true}
+  ministral3-3b:
+    hf_id: mistralai/Ministral-3-3B-Reasoning-2512
+    family: ministral3
+    scale: 4B
+    multimodal: true
+    ignore: ["re:.*lm_head", "re:.*vision_tower.*", "re:.*multi_modal_projector.*"]
+    chat_template_kwargs: {}     # 기본 시스템 프롬프트([THINK] 형식)는 chat template에 들어 있음
+  ministral3-8b:
+    hf_id: mistralai/Ministral-3-8B-Reasoning-2512
+    family: ministral3
+    scale: 8B
+    multimodal: true
+    ignore: ["re:.*lm_head", "re:.*vision_tower.*", "re:.*multi_modal_projector.*"]
+    chat_template_kwargs: {}
+
+# 파이프라인 검증용. 2504.04823 Table 5(Qwen3-8B BF16: AIME-120 68.6, GPQA-D 60.6)와 비교
+sanity:
+  qwen3-8b:
+    hf_id: Qwen/Qwen3-8B
+    multimodal: false
+    ignore: ["lm_head"]
+    chat_template_kwargs: {enable_thinking: true}
+    runs:
+      - {fmt: bf16}
+      - {fmt: w4a16, algo: gptq, calib: trace}
+
+formats:
+  nvfp4:
+    scheme: NVFP4                 # W4A4, FP4 E2M1, group 16, FP8 scale
+    main: true
+    algorithms: [rtn, gptq, autoround]
+    calib_dependent: [rtn, gptq, autoround]   # NVFP4 RTN도 activation global scale을 calibration으로 정함
+  w2a16:
+    scheme: W2A16                 # INT2 대칭, group 128, weight-only
+    main: true
+    algorithms: [rtn, gptq, autoround]
+    calib_dependent: [gptq, autoround]        # RTN은 데이터를 안 쓰므로 1회만
+  w4a16:
+    scheme: W4A16                 # sanity check 전용
+    main: false
+    algorithms: [gptq]
+    calib_dependent: [gptq]
+
+algorithms:
+  rtn: {}
+  gptq: {}                        # llm-compressor 기본값(block 128, dampening 0.01, act-order static)
+  autoround: {iters: 200, batch_size: 8, enable_torch_compile: true}
+
+calibration:
+  sources: [wikitext2, trace]
+  n_samples: 128
+  seq_len: 2048
+  seed: 0
+  trace_problems: 256             # NuminaMath-1.5에서 오염 제거 후 앞에서부터
+  trace_exclude_sources: [amc_aime]
+  decontam_ngram: 13
+
+benchmarks:
+  aime120: {seeds: [0, 1, 2]}
+  gpqa_diamond: {seeds: [0]}
+
+decoding:
+  temperature: 0.6
+  top_p: 0.95
+  top_k: 0                        # 끔
+  max_tokens: 32768
+
+vllm:
+  prompt_budget: 2048             # max_model_len = max_tokens + prompt_budget
+  gpu_memory_utilization: 0.90
+  max_num_seqs: 256
+  enable_prefix_caching: false
+  chunk: 256                      # 이 개수의 문제마다 결과를 디스크에 기록
+
+speed:
+  input_len: 512
+  output_len: 2048
+  batch_sizes: [1, 16, 64]
+  report_batch: 16                # effective speedup 계산에 쓰는 배치 크기
+  repeats: 3
+
+analysis:
+  bootstrap: 10000
+  loop_window: 2048
+  loop_ngram: 32
+  loop_threshold: 0.5
