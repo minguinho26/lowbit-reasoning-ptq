@@ -95,7 +95,7 @@ def main():
     import torch
     import transformers
     from llmcompressor import oneshot
-    from transformers import AutoModelForCausalLM, AutoModelForImageTextToText
+    from transformers import AutoModelForCausalLM, AutoModelForImageTextToText, AutoTokenizer
 
     cls = AutoModelForImageTextToText if mcfg.get("multimodal") else AutoModelForCausalLM
     model = cls.from_pretrained(src, dtype="auto")
@@ -103,7 +103,9 @@ def main():
     recipe = build_recipe(cfg, r["algo"], scheme, ignore)
 
     t0 = time.time()
-    kw = {"model": model, "recipe": recipe, "tokenizer": str(src)}
+    # 토크나이저 객체를 넘긴다. 경로(str)를 넘기면 llm-compressor가 AutoProcessor로 멀티모달 processor 전체를
+    # 로드하려 하고, Qwen3.5의 video processor가 torchvision을 요구해서 실패한다. 데이터는 이미 토큰화돼 있음
+    kw = {"model": model, "recipe": recipe, "tokenizer": AutoTokenizer.from_pretrained(src)}
     if mcfg.get("sequential_targets"):
         kw["sequential_targets"] = mcfg["sequential_targets"]
     if r["calib"]:
