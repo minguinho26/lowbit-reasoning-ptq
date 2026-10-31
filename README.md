@@ -67,6 +67,8 @@ $QPY src/quantize.py --run qwen3-8b__nvfp4__gptq__trace
 $QPY src/quantize.py --run qwen3-8b__nvfp4__autoround__trace
 ```
 
+자리를 오래 비울 때는 위 확인 작업과 calibration trace 생성을 묶은 queue_week1.sh를 tmux에서 돌린다. 단계가 실패해도 다음 단계로 넘어가고, `AUTO_TERMINATE=1`이면 다 끝난 뒤 pod을 terminate한다. 결과 요약은 /workspace/logs/queue_<시각>/summary.txt.
+
 확인할 것:
 - (1) truncation_rate. 원본부터 많이 잘리는 모델은 32K 예산이 부족한 것이다.
 - (3) NVFP4 GEMM 커널 이름. Marlin, W4A16, Humming이 들어가면 weight-only로 떨어진 것이라 W4A4 수치가 아니다. Emulation이면 속도 측정이 의미 없다.
