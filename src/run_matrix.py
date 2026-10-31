@@ -5,11 +5,11 @@
   serve 환경: make_calib traces, evaluate, bench_speed
 
 예: python src/run_matrix.py list
-    python src/run_matrix.py calib    --model qwen35-4b
-    python src/run_matrix.py quantize --model qwen35-4b
-    python src/run_matrix.py evaluate --model qwen35-4b --bench aime120
-    python src/run_matrix.py speed    --model qwen35-4b
-    python src/run_matrix.py all      --model qwen35-4b      # calib -> quantize -> evaluate -> speed
+    python src/run_matrix.py calib    --model qwen3-8b
+    python src/run_matrix.py quantize --model qwen3-8b
+    python src/run_matrix.py evaluate --model qwen3-8b --bench aime120
+    python src/run_matrix.py speed    --model qwen3-8b
+    python src/run_matrix.py all      --model qwen3-8b      # calib -> quantize -> evaluate -> speed
 """
 
 import argparse

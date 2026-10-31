@@ -69,7 +69,7 @@ def load(bench):
 
 
 def answer_part(text):
-    """thinking 구간 뒤의 최종 답 부분. Qwen3.5는 </think>, Ministral은 [/THINK]."""
+    """thinking 구간 뒤의 최종 답 부분. Qwen3, R1-Distill은 </think>. [/THINK]는 Mistral 계열용으로 남겨둠."""
     for marker in THINK_END_MARKERS:
         if marker in text:
             return text.rsplit(marker, 1)[1]

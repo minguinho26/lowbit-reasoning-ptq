@@ -8,9 +8,9 @@ windows : 텍스트를 이어 붙여 토큰화한 뒤 seq_len 길이 윈도우�
 오염 방지: source가 trace_exclude_sources(amc_aime)인 문제, 평가 문항(AIME-120, GPQA-Diamond)과
 decontam_ngram 단어 n-gram이 겹치는 문제를 뺀 뒤 앞에서부터 trace_problems개를 쓴다.
 
-예: python src/make_calib.py traces  --model qwen35-4b
-    python src/make_calib.py windows --model qwen35-4b --source wikitext2
-    python src/make_calib.py windows --model qwen35-4b --source trace
+예: python src/make_calib.py traces  --model qwen3-8b
+    python src/make_calib.py windows --model qwen3-8b --source wikitext2
+    python src/make_calib.py windows --model qwen3-8b --source trace
 """
 
 import argparse

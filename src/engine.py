@@ -4,7 +4,7 @@
   - HF config와 HF tokenizer 경로로만 로드(tokenizer_mode=hf, config_format=hf)
   - 모델 저장소의 generation_config 무시(generation_config=vllm). 디코딩은 설정 파일 값만 사용
   - 멀티모달 모델은 텍스트 전용으로 로드(language_model_only)
-  - special token을 출력 텍스트에 남김. Ministral의 [THINK]/[/THINK]가 special token이라 지우면 답 부분을 못 자름
+  - special token을 출력 텍스트에 남김. thinking 종료 표시가 special token인 모델에서 지워지면 답 부분을 못 자름
 """
 
 

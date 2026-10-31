@@ -3,7 +3,7 @@
 원본과 양자화 모델은 반드시 같은 pod에서 연달아 측정할 것(호스트마다 클럭, 전력 제한이 다를 수 있음).
 run_matrix.py speed --model <m> 이 원본부터 순서대로 돌린다.
 
-예: python src/bench_speed.py --run qwen35-4b__bf16
+예: python src/bench_speed.py --run qwen3-8b__bf16
 """
 
 import argparse

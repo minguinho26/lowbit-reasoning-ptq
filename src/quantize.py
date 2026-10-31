@@ -4,8 +4,8 @@
 알고리즘: rtn(QuantizationModifier), gptq(GPTQModifier), autoround(AutoRoundModifier)
 calibration: make_calib.py windows 결과(토큰 윈도우)를 그대로 넣음. 섞지 않음
 
-예: python src/quantize.py --run qwen35-4b__nvfp4__gptq__trace
-    python src/quantize.py --run ministral3-8b__w2a16__rtn
+예: python src/quantize.py --run qwen3-8b__nvfp4__gptq__trace
+    python src/quantize.py --run r1-qwen-7b__w2a16__rtn
 """
 
 import argparse

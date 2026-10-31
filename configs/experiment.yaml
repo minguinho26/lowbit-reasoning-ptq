@@ -1,6 +1,6 @@
 # 실험 설정. 모든 스크립트가 이 파일 하나를 읽는다.
 # 실행 단위(run) 이름 규칙: <model>__<format>[__<algorithm>__<calibration>]
-#   예) qwen35-4b__bf16, qwen35-4b__nvfp4__gptq__trace, ministral3-8b__w2a16__rtn
+#   예) qwen3-8b__bf16, qwen3-8b__nvfp4__gptq__trace, r1-qwen-7b__w2a16__rtn
 
 paths:
   workspace: /workspace          # 환경변수 WS로 덮어쓸 수 있음
@@ -12,44 +12,47 @@ paths:
   venv_serve: venv_serve
 
 models:
-  qwen35-4b:
-    hf_id: Qwen/Qwen3.5-4B
-    family: qwen3.5
-    scale: 4B
-    multimodal: true
-    ignore: ["re:.*lm_head", "re:.*visual.*", "re:.*linear_attn.*"]
-    chat_template_kwargs: {enable_thinking: true}
-  qwen35-9b:
-    hf_id: Qwen/Qwen3.5-9B
-    family: qwen3.5
-    scale: 8B
-    multimodal: true
-    ignore: ["re:.*lm_head", "re:.*visual.*", "re:.*linear_attn.*"]
-    chat_template_kwargs: {enable_thinking: true}
-  ministral3-3b:
-    hf_id: mistralai/Ministral-3-3B-Reasoning-2512
-    family: ministral3
-    scale: 4B
-    multimodal: true
-    ignore: ["re:.*lm_head", "re:.*vision_tower.*", "re:.*multi_modal_projector.*"]
-    chat_template_kwargs: {}     # 기본 시스템 프롬프트([THINK] 형식)는 chat template에 들어 있음
-  ministral3-8b:
-    hf_id: mistralai/Ministral-3-8B-Reasoning-2512
-    family: ministral3
-    scale: 8B
-    multimodal: true
-    ignore: ["re:.*lm_head", "re:.*vision_tower.*", "re:.*multi_modal_projector.*"]
-    chat_template_kwargs: {}
-
-# 파이프라인 검증용. 2504.04823 Table 5(Qwen3-8B BF16: AIME-120 68.6, GPQA-D 60.6)와 비교
-sanity:
-  qwen3-8b:
-    hf_id: Qwen/Qwen3-8B
+  qwen3-1.7b:
+    hf_id: Qwen/Qwen3-1.7B
+    family: qwen3                # Qwen3 base, 자체 post-training(RL 포함)
+    scale: 1.7B
     multimodal: false
     ignore: ["lm_head"]
     chat_template_kwargs: {enable_thinking: true}
+  qwen3-8b:
+    hf_id: Qwen/Qwen3-8B
+    family: qwen3
+    scale: 8B
+    multimodal: false
+    ignore: ["lm_head"]
+    chat_template_kwargs: {enable_thinking: true}
+  r1-qwen-1.5b:
+    hf_id: deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B
+    family: r1-distill           # Qwen2.5-Math base, DeepSeek-R1 데이터로 SFT 증류
+    scale: 1.5B
+    multimodal: false
+    ignore: ["lm_head"]
+    chat_template_kwargs: {}     # chat template이 생성 프롬프트에 <think>를 넣어줌
+  r1-qwen-7b:
+    hf_id: deepseek-ai/DeepSeek-R1-Distill-Qwen-7B
+    family: r1-distill
+    scale: 7B
+    multimodal: false
+    ignore: ["lm_head"]
+    chat_template_kwargs: {}
+  # 선택: 레시피(R1 증류)는 같고 base만 Llama인 대조군. 쓰려면 주석 해제
+  # r1-llama-8b:
+  #   hf_id: deepseek-ai/DeepSeek-R1-Distill-Llama-8B
+  #   family: r1-distill
+  #   scale: 8B
+  #   multimodal: false
+  #   ignore: ["lm_head"]
+  #   chat_template_kwargs: {}
+
+# 추가 검증 실행. 2504.04823 Table 5(Qwen3-8B GPTQ W4G128: AIME-120 66.9, GPQA-D 59.4)와 비교
+sanity:
+  qwen3-8b:
     runs:
-      - {fmt: bf16}
       - {fmt: w4a16, algo: gptq, calib: trace}
 
 formats:

@@ -3,8 +3,8 @@
 기록 항목: 정오답, 출력 토큰 수, truncation(max_tokens 도달), 루프 여부, 출력 텍스트.
 끝까지 돌면 <bench>__s<seed>.done.json 을 남긴다(run_matrix.py가 완료 여부 판단에 씀).
 
-예: python src/evaluate.py --run qwen35-4b__nvfp4__gptq__trace --bench aime120 --seed 0
-    python src/evaluate.py --run qwen35-4b__bf16 --bench aime120 --seed 0 --limit 20   # 빠른 확인
+예: python src/evaluate.py --run qwen3-8b__nvfp4__gptq__trace --bench aime120 --seed 0
+    python src/evaluate.py --run qwen3-8b__bf16 --bench aime120 --seed 0 --limit 20   # 빠른 확인
 """
 
 import argparse
