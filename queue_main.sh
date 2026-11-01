@@ -38,6 +38,12 @@ fi
 
 # 1) 다운로드, calibration, 양자화, 평가
 $PY src/run_matrix.py queue --gpus "$GPUS" --models "$MODELS" --log-dir "$LOG" --timeout "$TIMEOUT" 2>&1 | tee "$LOG/queue.out"
+# 큐가 정상 종료하지 않았으면(사람이 끊었거나 죽었으면) 속도 측정과 자동 종료로 넘어가지 않는다
+QRC=${PIPESTATUS[0]}
+if [ "$QRC" -ne 0 ]; then
+  echo "run_matrix queue가 비정상 종료(rc=$QRC). 속도 측정과 자동 종료를 건너뜀" | tee -a "$LOG/warn.txt"
+  exit "$QRC"
+fi
 
 # 2) 속도: 모델마다 원본과 양자화 설정을 GPU 하나에서 연달아
 for m in ${MODELS//,/ }; do
