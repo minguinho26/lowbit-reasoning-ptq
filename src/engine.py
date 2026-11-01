@@ -7,6 +7,26 @@
   - special token을 출력 텍스트에 남김. thinking 종료 표시가 special token인 모델에서 지워지면 답 부분을 못 자름
 """
 
+import glob
+import os
+import site
+
+
+def _add_nvrtc_lib_path():
+    """W2A16 커널(Humming)은 NVRTC로 JIT 컴파일하는데, pip로 깔린 libnvrtc가 같은 폴더의
+    libnvrtc-builtins.so를 못 찾아 실패한다. 그 폴더를 LD_LIBRARY_PATH 앞에 넣는다.
+    Humming의 컴파일은 별도 프로세스라 여기서 바꾼 환경변수가 그대로 적용된다."""
+    for sp in site.getsitepackages():
+        for lib in glob.glob(os.path.join(sp, "nvidia", "cu*", "lib", "libnvrtc-builtins.so.*")):
+            d = os.path.dirname(lib)
+            cur = os.environ.get("LD_LIBRARY_PATH", "")
+            if d not in cur.split(":"):
+                os.environ["LD_LIBRARY_PATH"] = f"{d}:{cur}" if cur else d
+            return
+
+
+_add_nvrtc_lib_path()
+
 
 def build_llm(cfg, model_dir, mcfg, **overrides):
     from vllm import LLM
