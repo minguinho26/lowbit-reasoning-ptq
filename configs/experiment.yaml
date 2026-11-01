@@ -64,6 +64,11 @@ sanity:
       - {fmt: w4a16, algo: gptq, calib: trace}
 
 formats:
+  nvfp4a16:
+    scheme: NVFP4A16              # NVFP4 가중치만(W4A16). activation 양자화 효과를 떼어 보는 기준
+    main: true
+    algorithms: [rtn, gptq, autoround]
+    calib_dependent: [gptq, autoround]        # weight-only RTN은 데이터를 안 쓰므로 1회만
   nvfp4:
     scheme: NVFP4                 # W4A4, FP4 E2M1, group 16, FP8 scale
     main: true
@@ -79,6 +84,12 @@ formats:
     main: false
     algorithms: [gptq]
     calib_dependent: [gptq]
+
+# 요인 하나만 다른 포맷 쌍. 같은 알고리즘, 같은 calibration끼리 짝지어 b - a를 계산한다(analyze.py)
+#   가중치 포맷은 원소 타입, bit, group, scale 방식이 묶인 각 포맷의 표준 정의 그대로다
+format_comparisons:
+  - {a: nvfp4a16, b: nvfp4, factor: activation}       # 가중치는 NVFP4로 같고 activation만 16 -> 4
+  - {a: nvfp4a16, b: w2a16, factor: weight_format}    # activation은 16으로 같고 가중치만 NVFP4 -> INT2
 
 algorithms:
   rtn: {}
@@ -96,7 +107,7 @@ calibration:
 
 benchmarks:
   aime120: {seeds: [0, 1, 2]}
-  gpqa_diamond: {seeds: [0]}
+  gpqa_diamond: {seeds: [0, 1, 2]}
 
 decoding:
   temperature: 0.6

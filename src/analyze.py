@@ -5,6 +5,7 @@ factor_effects.csv : 모델 × 포맷 × 벤치별 요인 효과. diff = 정확�
                      algorithm   : calibration 고정, 알고리즘 간 최고 - 최저
                      calibration : 알고리즘 고정, calibration 간 최고 - 최저
                      vs_rtn      : 데이터를 쓰는 알고리즘 - RTN (음수면 RTN보다 나쁨)
+                     activation, weight_format : 설정 파일 format_comparisons의 포맷 쌍. 같은 알고리즘, calibration끼리 b - a
 speed.csv          : 배치 크기별 처리량, 원본 대비 속도 향상, effective speedup(= 속도 향상 / paired 길이 비율)
 
 통계 처리: 문제 단위 paired bootstrap. 문제별 값은 seed 평균(정답률, 출력 길이).
@@ -182,6 +183,30 @@ def main():
                         fac_rows.append({"model": model, "fmt": fmt, "bench": bench, "factor": "vs_rtn",
                                          "fixed": f"algo={algo},calib={calib}", "run_a": a_run, "run_b": rtn_run,
                                          "diff": m, "diff_lo": lo, "diff_hi": hi})
+    # 요인 하나만 다른 포맷 쌍
+    def paired_diff(a_run, b_run, bench):
+        if (a_run, bench) not in data or (b_run, bench) not in data:
+            return None
+        a, b = data[(a_run, bench)], data[(b_run, bench)]
+        uids = sorted(set(a) & set(b))
+        d = [per_problem(b[u])[0] - per_problem(a[u])[0] for u in uids]
+        m, lo, hi, _ = bootstrap_ci(d, B, rng)
+        return {"run_a": a_run, "run_b": b_run, "diff": m, "diff_lo": lo, "diff_hi": hi}
+
+    for comp in cfg.get("format_comparisons", []):
+        fa, fb = cfg["formats"][comp["a"]], cfg["formats"][comp["b"]]
+        for model in cfg["models"]:
+            for bench in benches:
+                for algo in fa["algorithms"]:
+                    if algo not in fb["algorithms"]:
+                        continue
+                    dep_a, dep_b = algo in fa["calib_dependent"], algo in fb["calib_dependent"]
+                    for calib in (cfg["calibration"]["sources"] if dep_a or dep_b else [None]):
+                        res = paired_diff(run_name(model, comp["a"], algo, calib if dep_a else None),
+                                          run_name(model, comp["b"], algo, calib if dep_b else None), bench)
+                        if res:
+                            fac_rows.append({"model": model, "fmt": f"{comp['a']}->{comp['b']}", "bench": bench,
+                                             "factor": comp["factor"], "fixed": f"algo={algo},calib={calib}", **res})
     write_csv(out / "factor_effects.csv", fac_rows)
 
     # 3) speed

@@ -4,7 +4,7 @@
 
 ## 1. 질문
 
-리즈닝 모델의 post-training quantization에서 원본(BF16) 대비 성능 저하를 더 크게 좌우하는 것은 양자화 알고리즘인가, calibration 데이터인가. 그 답은 모델 크기(Qwen3 1.7B, 4B, 8B)에 따라 달라지는가. 두 포맷(NVFP4 W4A4, INT2 W2A16) 각각에서 같은 분석을 하되, 포맷 간 차이는 통제된 비교가 아니므로 서술로만 다룬다(11절).
+리즈닝 모델의 post-training quantization에서 원본(BF16) 대비 성능 저하를 더 크게 좌우하는 것은 양자화 알고리즘인가, calibration 데이터인가. 그 답은 모델 크기(Qwen3 1.7B, 4B, 8B)에 따라, 그리고 activation 양자화 여부와 가중치 포맷에 따라 달라지는가. 포맷은 한 번에 요인 하나만 바뀌도록 BF16, NVFP4 W4A16, NVFP4 W4A4, INT2 W2A16 네 설정으로 구성한다(4절).
 
 세부 질문:
 1. 데이터 의존도가 높은 알고리즘(GPTQ, AutoRound)일수록 calibration 도메인에 더 민감한가.
@@ -44,16 +44,35 @@
 
 ## 4. 포맷 × 알고리즘 × calibration
 
-| 포맷 | 정의 | 알고리즘 | calibration | 모델당 설정 수 |
-|---|---|---|---|---|
-| NVFP4 W4A4 | FP4 E2M1, group 16, FP8 scale. activation도 FP4 | RTN, GPTQ, AutoRound | WikiText2, reasoning trace | 6 |
-| INT2 W2A16 | INT2 대칭, group 128, weight-only | RTN(1회), GPTQ, AutoRound | GPTQ/AutoRound만 2종 | 5 |
-| BF16 | 원본 | - | - | 1 |
+포맷은 이웃한 설정끼리 요인 하나만 다르게 둔다.
 
-- NVFP4 RTN도 activation global scale을 calibration으로 정하므로 calibration 축에 포함한다.
-- INT2 RTN은 calibration을 쓰지 않으므로 1회만 돌린다. 데이터를 쓰지 않는 기준선 역할이다.
+```
+BF16 --(가중치 NVFP4)--> NVFP4 W4A16 --(activation FP4)--> NVFP4 W4A4
+                              |
+                       (가중치 포맷 INT2)
+                              v
+                         INT2 W2A16
+```
+
+| 비교 | 바뀌는 요인 | 고정되는 것 |
+|---|---|---|
+| NVFP4 W4A16 vs NVFP4 W4A4 | activation 양자화(16 -> FP4) | 가중치 포맷(NVFP4). RTN은 가중치가 완전히 같다 |
+| NVFP4 W4A16 vs INT2 W2A16 | 가중치 포맷(NVFP4 -> INT2) | activation 16비트 |
+| BF16 vs NVFP4 W4A16 | 가중치 양자화 | activation 16비트 |
+
+가중치 포맷은 원소 타입, bit, group, scale 방식이 묶인 각 포맷의 표준 정의 그대로 하나의 요인으로 본다. 이 요인 안의 구성(bit 대 group 등)은 분리하지 않는다. group을 맞추면 실제 비트 수가 달라지고(INT2 g16은 가중치당 3비트), 둘을 다 맞추면 존재하지 않는 포맷이 된다. MR-GPTQ도 INT4, NVFP4, MXFP4를 각 규격 그대로 비교한다.
+
+| 포맷 | 원소 | group / scale | 가중치당 실제 비트 | activation | 알고리즘 | calibration | 모델당 설정 수 |
+|---|---|---|---|---|---|---|---|
+| NVFP4 W4A16 | FP4 E2M1 | 16 / FP8 E4M3 + FP32 global | 4.5 | BF16 | RTN(1회), GPTQ, AutoRound | GPTQ/AutoRound만 2종 | 5 |
+| NVFP4 W4A4 | FP4 E2M1 | 16 / FP8 E4M3 + FP32 global | 4.5 | NVFP4 | RTN, GPTQ, AutoRound | 3개 모두 2종 | 6 |
+| INT2 W2A16 | INT2 대칭 | 128 / BF16 | 2.125 | BF16 | RTN(1회), GPTQ, AutoRound | GPTQ/AutoRound만 2종 | 5 |
+| BF16 | 원본 | - | 16 | BF16 | - | - | 1 |
+
+- NVFP4 W4A4 RTN은 activation global scale을 calibration으로 정하므로 calibration 축에 포함한다. weight-only RTN(NVFP4 W4A16, INT2)은 데이터를 쓰지 않으므로 1회만 돌린다.
 - 알고리즘을 데이터 의존도 순으로 놓으면 RTN < GPTQ(Hessian 기반 오차 보정) < AutoRound(블록 출력 재구성으로 rounding, clipping 학습)이다.
-- 합계: 3개 모델 × 12개 = 36개 설정. 검증용 Qwen3-8B GPTQ W4A16 1개를 더해 37개.
+- 합계: 3개 모델 × 17개 = 51개 설정. 검증용 Qwen3-8B INT4 GPTQ W4A16 1개를 더해 52개.
+- INT2 W2A4(INT2 가중치 × FP4 activation)는 넣지 않는다. 커널이 없어 fake quantization으로만 돌릴 수 있고, INT2 W2A16에서 이미 RTN은 붕괴하고 AutoRound는 루프에 빠져(1주차, 1.5B) 바닥 효과가 예상된다.
 
 calibration:
 - WikiText2: wikitext-2-raw-v1 train 텍스트를 이어 붙여 2048토큰 윈도우 128개를 무작위 추출(2504.04823과 동일).
@@ -67,7 +86,7 @@ calibration:
 | 유형 | 벤치 | 문제 수 | seed |
 |---|---|---|---|
 | 수학 | AIME-120 (AIME 2022~2024 90문제 + AIME 2025 30문제) | 120 | 3 |
-| 과학 | GPQA-Diamond | 198 | 1 |
+| 과학 | GPQA-Diamond | 198 | 3 |
 
 - 프롬프트와 데이터셋은 2504.04823 코드와 같다. AIME: 문제 뒤에 "Please reason step by step, and put your final answer within \boxed{}." GPQA: simple-evals 템플릿, 선택지 순서는 고정 seed로 한 번만 섞어 모든 설정에서 동일하게 쓴다.
 - 디코딩은 전 모델 동일: temperature 0.6, top-p 0.95, top-k 끔, penalty 없음, 최대 32,768 토큰. 모델 저장소의 generation_config는 적용하지 않는다.
@@ -78,7 +97,7 @@ calibration:
 
 | 지표 | 정의 |
 |---|---|
-| 정확도 | 벤치별 pass@1. AIME는 seed 3개 평균 |
+| 정확도 | 벤치별 pass@1. seed 3개 평균 |
 | 원본 대비 저하 폭 | 양자화 모델 정확도 − 같은 모델 BF16 정확도 |
 | paired 길이 비율 | 같은 문제에서 양자화 모델 출력 토큰 수 / 원본 출력 토큰 수. 완료 샘플 기준, 둘 다 맞힌 문제 기준 두 가지 |
 | 길이 분포 | 출력 토큰 수 중앙값, p90 |
@@ -91,8 +110,9 @@ calibration:
 ## 7. 통계 처리
 
 - 모든 비교(원본 대비, 설정끼리)는 문제 단위 paired bootstrap(10,000회)으로 차이의 95% 신뢰구간을 구한다. 구간이 0을 포함하면 "구분되지 않음"으로 판정한다.
-- AIME는 문제별로 seed 3개 평균 정답률을 쓴 뒤 bootstrap한다. GPQA는 단일 seed라 seed 간 변동을 따로 분리하지 못한다는 점을 리포트에 적는다.
+- 문제별로 seed 3개 평균 정답률을 쓴 뒤 bootstrap한다. seed 수는 2504.04823과 같다.
 - 요인 효과: 모델 × 포맷별로, calibration을 고정하고 알고리즘을 바꿨을 때의 범위와 알고리즘을 고정하고 calibration을 바꿨을 때의 범위를 비교한다. 각 범위에 bootstrap 구간을 같이 적는다.
+- 포맷 요인: 4절의 포맷 쌍(activation, 가중치 포맷)마다 같은 알고리즘, 같은 calibration끼리 짝지어 차이와 구간을 구한다.
 
 ## 8. 하드웨어와 소프트웨어
 
@@ -115,15 +135,8 @@ calibration:
 
 - 처리량은 KV cache 용량이 정한다. 평가 처리량은 속도 비교에 쓰지 않는다(속도는 bench_speed로만 비교).
 - 가정: GPQA 출력 길이는 AIME의 0.53배(R1-1.5B 실측). NVFP4 출력은 원본의 1.17배(Qwen3-8B 실측). 데이터를 쓰는 INT2 설정은 모든 샘플이 32K까지 간다(최악). INT2 RTN은 짧게 붕괴해서 비용이 거의 없다. Qwen3-4B는 아직 안 재서 원본 450, 양자화 650 tok/s로 둔다.
-- 평가 GPU 시간(5090, $1.19/h):
-
-| GPQA 설정 | 1.7B | 4B | 8B | 합계 |
-|---|---|---|---|---|
-| 전 설정 1 seed | 46h | 62h | 80h | 187h, $223 |
-| INT2는 GPQA 없음, 나머지 1 seed | 38h | 50h | 66h | 154h, $183 |
-| INT2는 GPQA 없음, 원본과 NVFP4는 3 seed | 48h | 64h | 85h | 196h, $234 |
-
-- 그 외(지금까지 쓴 비용 제외): 양자화 약 11시간($13), Qwen3-4B trace 생성 약 3시간($4), 속도 측정 약 2시간($3), 스토리지($10~20).
+- 평가 GPU 시간(5090, $1.19/h, AIME와 GPQA 모두 3 seed): BF16 21시간, NVFP4 W4A16 81시간, NVFP4 W4A4 109시간, INT2 W2A16 159시간, 검증용 W4A16 6시간. 합계 약 377시간, $448. INT2가 모든 샘플에서 32K까지 간다는 최악 가정이 가장 크다. Qwen3-8B INT2 AutoRound 30문제를 먼저 돌려 실제 길이로 다시 계산한다.
+- 그 외(지금까지 쓴 비용 제외): 양자화 약 14시간($17), Qwen3-4B trace 생성 약 3시간($4), 속도 측정 약 3시간($4), 스토리지($10~20). 총액 약 $485.
 
 ## 10. 일정
 
@@ -132,7 +145,7 @@ calibration:
 - RTN, GPTQ, AutoRound × NVFP4, INT2 양자화 11개 경로가 R1-Distill-Qwen-1.5B에서 끝까지 도는 것 확인.
 - Qwen3-1.7B, Qwen3-8B calibration trace 생성 완료.
 
-2주차: Qwen3-4B 원본 확인과 trace 생성, 36개 설정 양자화
+2주차: Qwen3-4B 원본 확인과 trace 생성, NVFP4 W4A16 커널 확인, 51개 설정 양자화
 
 3주차: 평가와 속도 측정
 
@@ -141,8 +154,8 @@ calibration:
 ## 11. 범위와 한계
 
 - Qwen3 한 계열이라 다른 아키텍처나 학습 레시피(예: R1 증류)로 일반화할 수 없다.
-- NVFP4 W4A4와 INT2 W2A16은 bit 수, 데이터 타입, activation 양자화 여부가 동시에 다르다. 그래서 포맷 간 차이는 bit-width 효과로 해석하지 않는다. 각 포맷 안의 비교(알고리즘, calibration)만 결론에 쓰고, 포맷 간 패턴 차이는 서술로 둔다. bit만 다른 통제 비교(INT4 W4A16 vs INT2 W2A16)는 이번 범위 밖이다.
-- GPQA는 단일 seed다.
+- NVFP4와 INT2 가중치는 원소 타입, bit, group/scale 방식이 동시에 다르다(activation은 NVFP4 W4A16과 INT2 W2A16 비교에서 16비트로 고정). 가중치 포맷 요인(NVFP4 -> INT2)은 이 셋이 묶인 포맷 단위 비교이고, bit 감소 효과로 해석하지 않는다. 결과 표에 가중치당 실제 비트(4.5 vs 2.125)를 같이 적는다. bit만 다른 비교(INT4 W4A16 vs INT2 W2A16)는 이번 범위 밖이다.
+- INT2 × FP4 activation 조합이 없어 가중치 포맷과 activation 양자화의 상호작용은 보지 않는다.
 - 모델별 권장 샘플링을 쓰지 않으므로 원본 정확도가 모델카드 수치보다 낮을 수 있다.
 - 원본도 32K에서 일부 잘린다(Qwen3-8B AIME 약 13%). 정확도는 32K 예산 기준이다.
 

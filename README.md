@@ -35,7 +35,7 @@ bash setup_pod.sh
 export WS=/workspace HF_HOME=/workspace/hf_cache
 PY=/workspace/venv_serve/bin/python
 $PY src/fetch_models.py
-$PY src/run_matrix.py list     # 실행 단위 37개 확인
+$PY src/run_matrix.py list     # 실행 단위 52개 확인
 ```
 
 장시간 작업은 tmux 안에서 돌리고, 끝나면 pod은 terminate한다. 결과는 볼륨에 남는다.
