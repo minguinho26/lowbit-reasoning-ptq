@@ -24,6 +24,14 @@ mkdir -p "$LOG"
 [ -n "${HF_TOKEN:-}" ] || echo "경고: HF_TOKEN 없음. GPQA 평가가 실패한다" | tee -a "$LOG/warn.txt"
 echo "models=$MODELS gpus=$GPUS log=$LOG"
 
+# 이전 실행에서 남은 프로세스(특히 vLLM EngineCore)가 GPU 메모리를 잡고 있으면 새 엔진이 OOM으로 못 뜬다
+LEFT=$(nvidia-smi --query-compute-apps=pid,process_name,used_memory --format=csv,noheader)
+if [ -n "$LEFT" ]; then
+  echo "GPU에 이미 프로세스가 있음. 정리하고 다시 실행할 것:"; echo "$LEFT"
+  echo '  pkill -f "evaluate.py|quantize.py|make_calib.py|bench_speed.py|run_matrix.py|EngineCore"; sleep 5; nvidia-smi'
+  exit 1
+fi
+
 # 1) 다운로드, calibration, 양자화, 평가
 $PY src/run_matrix.py queue --gpus "$GPUS" --models "$MODELS" --log-dir "$LOG" --timeout "$TIMEOUT" 2>&1 | tee "$LOG/queue.out"
 

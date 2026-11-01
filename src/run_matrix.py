@@ -14,7 +14,8 @@
 
 queue: GPU마다 워커를 하나씩 두고, 작업 단위(원본 다운로드, calibration, 양자화 1개, 평가 1개 = 실행 단위 x 벤치 x seed)를
        목록 순서대로 가져가 실행한다. 앞 단계(다운로드 -> calibration -> 양자화 -> 평가)가 끝난 단위만 가져가고,
-       이미 끝난 단위는 건너뛴다. 실패한 단위에 의존하는 단위는 건너뛴다. 속도 측정은 하지 않는다(다른 GPU가 돌고 있으면
+       이미 끝난 단위는 건너뛴다. 실패한 단위에 의존하는 단위는 건너뛴다. 워커 하나가 연달아 --max-fails번 실패하면
+       그 GPU에 문제가 있다고 보고 그 워커만 멈춘다(원인이 남은 채로 목록 전체가 실패로 넘어가지 않게). 속도 측정은 하지 않는다(다른 GPU가 돌고 있으면
        측정이 흔들리므로 queue가 끝난 뒤 speed로 따로 잰다).
        목록 순서: 모든 모델 다운로드 -> 첫 모델 원본 평가(공개 수치 재현 확인) -> 모든 모델 calibration -> 모델 순서대로
        [원본 평가, 실행 단위마다 양자화 -> 평가]. 실행 단위는 검증용 W4A16, NVFP4 W4A4 RTN을 앞에 둔다.
@@ -183,7 +184,11 @@ def cmd_queue(cfg, a):
             return None, waiting and any(s == "running" for s in state.values())
 
     def worker(gpu):
+        fails = 0
         while True:
+            if fails >= a.max_fails:
+                print(f"[{time.strftime('%F %T')}] gpu{gpu} stopped after {fails} consecutive failures", flush=True)
+                return
             u, waiting = take()
             if u is None:
                 if not waiting:
@@ -204,6 +209,7 @@ def cmd_queue(cfg, a):
                     rc = "timeout"
             ok = rc == 0 and u["done"]()
             mins = (time.time() - t0) / 60
+            fails = 0 if ok else fails + 1
             with lock:
                 state[u["name"]] = "ok" if ok else "fail"
                 with status_file.open("a") as f:
@@ -234,6 +240,7 @@ def main():
     p.add_argument("--models", help="queue: 모델 순서, 쉼표로 구분. 앞의 모델부터 처리")
     p.add_argument("--log-dir", default="logs/queue", help="queue: 단위별 로그와 status.tsv 위치")
     p.add_argument("--timeout", type=int, default=6 * 3600, help="queue: 단위 하나의 최대 실행 시간(초)")
+    p.add_argument("--max-fails", type=int, default=3, help="queue: 워커 하나가 연달아 이만큼 실패하면 그 워커를 멈춤")
     p.add_argument("--config")
     a = p.parse_args()
     cfg = load_config(a.config)
