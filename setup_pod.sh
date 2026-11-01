@@ -7,6 +7,8 @@ WS=${WS:-/workspace}
 HERE=$(cd "$(dirname "$0")" && pwd)
 export HF_HOME=$WS/hf_cache
 export UV_CACHE_DIR=$WS/uv_cache
+# uv가 받은 python도 볼륨에 둔다. 컨테이너 디스크(~/.local)에 두면 pod을 새로 띄울 때 venv가 깨진다
+export UV_PYTHON_INSTALL_DIR=$WS/uv_python
 mkdir -p "$HF_HOME" "$UV_CACHE_DIR" "$WS/models" "$WS/calib" "$WS/results"
 
 echo "== GPU"
@@ -18,8 +20,10 @@ fi
 
 command -v uv >/dev/null || pip install -q uv
 
-[ -x "$WS/venv_quant/bin/python" ] || uv venv "$WS/venv_quant" --python 3.12
-[ -x "$WS/venv_serve/bin/python" ] || uv venv "$WS/venv_serve" --python 3.12
+# venv가 없거나, 예전 pod의 python을 가리키고 있어서 실행이 안 되면 새로 만든다(패키지는 uv cache에서 다시 깔림)
+for v in venv_quant venv_serve; do
+  "$WS/$v/bin/python" -V >/dev/null 2>&1 || uv venv --clear "$WS/$v" --python 3.12
+done
 uv pip install --python "$WS/venv_quant/bin/python" -r "$HERE/requirements-quant.txt"
 uv pip install --python "$WS/venv_serve/bin/python" -r "$HERE/requirements-serve.txt"
 
