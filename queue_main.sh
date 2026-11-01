@@ -25,7 +25,7 @@ mkdir -p "$LOG"
 echo "models=$MODELS gpus=$GPUS log=$LOG"
 
 # 큐는 한 번에 하나만. 두 개가 돌면 같은 GPU에 엔진이 겹쳐 OOM이 난다
-exec 9>"$WS/logs/.queue.lock"
+exec 9>/tmp/lowbit_queue.lock   # 컨테이너 로컬 디스크에 둠. 네트워크 볼륨에서는 flock이 안 될 수 있음
 flock -n 9 || { echo "다른 queue_main.sh가 이미 돌고 있음. ps aux | grep run_matrix 로 확인할 것"; exit 1; }
 
 # 이전 실행에서 남은 프로세스(특히 vLLM EngineCore)가 GPU 메모리를 잡고 있으면 새 엔진이 OOM으로 못 뜬다
