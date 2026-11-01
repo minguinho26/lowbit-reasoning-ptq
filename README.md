@@ -68,7 +68,6 @@ $QPY src/quantize.py --run qwen3-8b__nvfp4__autoround__trace
 ```
 
 자리를 오래 비울 때는 위 확인 작업과 calibration trace 생성을 묶은 queue_week1.sh를 tmux에서 돌린다. 단계가 실패해도 다음 단계로 넘어가고, `AUTO_TERMINATE=1`이면 다 끝난 뒤 pod을 terminate한다. 결과 요약은 /workspace/logs/queue_<시각>/summary.txt.
-queue_week2.sh는 새 구성(Qwen3 1.7B/4B/8B, NVFP4 W4A16)의 확인 작업과 Qwen3-1.7B 본 실행 앞부분을 같은 방식으로 돌린다.
 
 확인할 것:
 - (1) truncation_rate. 원본부터 많이 잘리는 모델은 32K 예산이 부족한 것이다.
@@ -79,18 +78,15 @@ queue_week2.sh는 새 구성(Qwen3 1.7B/4B/8B, NVFP4 W4A16)의 확인 작업과 
 ## 본 실행
 
 ```bash
-for m in qwen3-1.7b qwen3-4b qwen3-8b; do
-  $PY src/run_matrix.py calib --model $m
-  $PY src/run_matrix.py quantize --model $m
-done
-for m in qwen3-1.7b qwen3-4b qwen3-8b; do
-  $PY src/run_matrix.py evaluate --model $m
-done
-# 속도: 모델 하나의 원본과 양자화 설정을 같은 pod에서 연달아
-for m in qwen3-1.7b qwen3-4b qwen3-8b; do
-  $PY src/run_matrix.py speed --model $m
-done
-$PY src/analyze.py             # results/analysis/*.csv
+tmux new -s q
+AUTO_TERMINATE=1 bash queue_main.sh        # pod의 GPU 전부 사용, 모델 순서 qwen3-8b,qwen3-4b,qwen3-1.7b
 ```
+
+- GPU마다 워커가 하나씩 붙어서 작업 단위(다운로드, calibration, 양자화 1개, 평가 1개 = 실행 단위 x 벤치 x seed)를 순서대로 나눠 가져간다. 앞 단계가 끝난 단위만 가져가고, 실패한 단위에 걸린 단위는 건너뛴다.
+- 첫 모델(Qwen3-8B)의 원본 평가가 맨 앞이다. 2504.04823 Table 5, ReSET 수치와 먼저 비교한다.
+- 평가가 다 끝나면 GPU 하나로 속도를 잰다. 그다음 /workspace/logs/main_<시각>/summary.txt를 쓰고 pod을 terminate한다.
+- 끊기면 같은 명령으로 다시 돌린다. 끝난 단위는 건너뛴다.
+- 작업 단위 목록 확인: `$PY src/run_matrix.py queue --models qwen3-8b,qwen3-4b,qwen3-1.7b --dry`
+- 분석: `$PY src/analyze.py` (results/analysis/*.csv)
 
 `--dry`를 붙이면 실행할 명령만 출력한다.
