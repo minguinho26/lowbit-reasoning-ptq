@@ -19,6 +19,13 @@ models:
     multimodal: false
     ignore: ["lm_head"]
     chat_template_kwargs: {enable_thinking: true}
+  qwen3-4b:
+    hf_id: Qwen/Qwen3-4B
+    family: qwen3
+    scale: 4B
+    multimodal: false
+    ignore: ["lm_head"]
+    chat_template_kwargs: {enable_thinking: true}
   qwen3-8b:
     hf_id: Qwen/Qwen3-8B
     family: qwen3
@@ -26,20 +33,21 @@ models:
     multimodal: false
     ignore: ["lm_head"]
     chat_template_kwargs: {enable_thinking: true}
-  r1-qwen-1.5b:
-    hf_id: deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B
-    family: r1-distill           # Qwen2.5-Math base, DeepSeek-R1 데이터로 SFT 증류
-    scale: 1.5B
-    multimodal: false
-    ignore: ["lm_head"]
-    chat_template_kwargs: {}     # chat template이 생성 프롬프트에 <think>를 넣어줌
-  r1-qwen-7b:
-    hf_id: deepseek-ai/DeepSeek-R1-Distill-Qwen-7B
-    family: r1-distill
-    scale: 7B
-    multimodal: false
-    ignore: ["lm_head"]
-    chat_template_kwargs: {}
+  # R1-Distill은 2026-11-01에 제외(Qwen3 단일 레시피에서 크기 축만 본다). 다시 쓰려면 주석 해제
+  # r1-qwen-1.5b:
+  #   hf_id: deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B
+  #   family: r1-distill           # Qwen2.5-Math base, DeepSeek-R1 데이터로 SFT 증류
+  #   scale: 1.5B
+  #   multimodal: false
+  #   ignore: ["lm_head"]
+  #   chat_template_kwargs: {}     # chat template이 생성 프롬프트에 <think>를 넣어줌
+  # r1-qwen-7b:
+  #   hf_id: deepseek-ai/DeepSeek-R1-Distill-Qwen-7B
+  #   family: r1-distill
+  #   scale: 7B
+  #   multimodal: false
+  #   ignore: ["lm_head"]
+  #   chat_template_kwargs: {}
   # 선택: 레시피(R1 증류)는 같고 base만 Llama인 대조군. 쓰려면 주석 해제
   # r1-llama-8b:
   #   hf_id: deepseek-ai/DeepSeek-R1-Distill-Llama-8B
