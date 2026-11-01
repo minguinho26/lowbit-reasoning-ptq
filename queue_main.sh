@@ -28,7 +28,7 @@ echo "models=$MODELS gpus=$GPUS log=$LOG"
 LEFT=$(nvidia-smi --query-compute-apps=pid,process_name,used_memory --format=csv,noheader)
 if [ -n "$LEFT" ]; then
   echo "GPU에 이미 프로세스가 있음. 정리하고 다시 실행할 것:"; echo "$LEFT"
-  echo '  pkill -f "evaluate.py|quantize.py|make_calib.py|bench_speed.py|run_matrix.py|EngineCore"; sleep 5; nvidia-smi'
+  echo '  pkill -9 -f "evaluate.py|quantize.py|make_calib.py|bench_speed.py|run_matrix.py|EngineCore"; sleep 5; nvidia-smi'
   exit 1
 fi
 
