@@ -39,14 +39,16 @@ fi
 # 1) 다운로드, calibration, 양자화, 평가
 $PY src/run_matrix.py queue --gpus "$GPUS" --models "$MODELS" --log-dir "$LOG" --timeout "$TIMEOUT" 2>&1 | tee "$LOG/queue.out"
 # 큐가 정상 종료하지 않았으면(사람이 끊었거나 죽었으면) 속도 측정과 자동 종료로 넘어가지 않는다
+# rc=2: 워커가 연속 실패로 멈춤. 남은 작업을 못 하는 상태라 속도 측정은 건너뛰고, 비용이 계속 나가지 않게 자동 종료는 한다
 QRC=${PIPESTATUS[0]}
-if [ "$QRC" -ne 0 ]; then
+if [ "$QRC" -ne 0 ] && [ "$QRC" -ne 2 ]; then
   echo "run_matrix queue가 비정상 종료(rc=$QRC). 속도 측정과 자동 종료를 건너뜀" | tee -a "$LOG/warn.txt"
   exit "$QRC"
 fi
+[ "$QRC" -eq 2 ] && echo "워커가 연속 실패로 멈춤. 속도 측정을 건너뜀. 원인은 status.tsv의 FAIL 단위 로그 참고" | tee -a "$LOG/warn.txt"
 
 # 2) 속도: 모델마다 원본과 양자화 설정을 GPU 하나에서 연달아
-for m in ${MODELS//,/ }; do
+[ "$QRC" -eq 0 ] && for m in ${MODELS//,/ }; do
   CUDA_VISIBLE_DEVICES=${GPUS%%,*} timeout "$TIMEOUT" $PY src/run_matrix.py speed --model "$m" > "$LOG/speed__$m.log" 2>&1
   printf "speed:%s\t%s\n" "$m" "$([ $? -eq 0 ] && echo ok || echo FAIL)" >> "$LOG/status.tsv"
 done

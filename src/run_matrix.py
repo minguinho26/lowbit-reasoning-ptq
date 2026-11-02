@@ -183,11 +183,14 @@ def cmd_queue(cfg, a):
                 waiting = True
             return None, waiting and any(s == "running" for s in state.values())
 
+    stopped = []
+
     def worker(gpu):
         fails = 0
         while True:
             if fails >= a.max_fails:
                 print(f"[{time.strftime('%F %T')}] gpu{gpu} stopped after {fails} consecutive failures", flush=True)
+                stopped.append(gpu)
                 return
             u, waiting = take()
             if u is None:
@@ -226,6 +229,9 @@ def cmd_queue(cfg, a):
     print(f"queue finished. not done: {len(left)}")
     for n in left:
         print(f"  {n} ({state.get(n, '-')})")
+    if stopped:
+        print(f"workers stopped by consecutive failures: gpu{', gpu'.join(stopped)}")
+        sys.exit(2)
 
 
 def main():
