@@ -18,4 +18,10 @@ LOG=$(ls -td "$WS"/logs/main_* 2>/dev/null | head -1)
 echo
 echo "fail: $(grep -c FAIL "$LOG/status.tsv" 2>/dev/null || echo 0)  ok: $(grep -c $'\tok' "$LOG/status.tsv" 2>/dev/null || echo 0)"
 grep FAIL "$LOG/status.tsv" 2>/dev/null
+# 실패한 단위마다 로그에서 마지막 에러 줄
+grep FAIL "$LOG/status.tsv" 2>/dev/null | cut -f1 | grep -v '^speed' | head -5 | while read -r u; do
+  f="$LOG/${u//:/__}.log"
+  [ -f "$f" ] && echo "-- $u: $(grep -E 'Error|error:|No space|Killed|OutOfMemory' "$f" | tail -1 | cut -c1-200)"
+done
+echo; df -h "$WS" | tail -1; free -g | awk 'NR==2{print "RAM total " $2 "G, used " $3 "G"}'
 tail -2 "$LOG/queue.out"
