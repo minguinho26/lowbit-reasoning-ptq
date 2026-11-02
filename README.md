@@ -86,6 +86,8 @@ AUTO_TERMINATE=1 bash queue_main.sh        # pod의 GPU 전부 사용, 모델 �
 - 첫 모델(Qwen3-8B)의 원본 평가가 맨 앞이다. 2504.04823 Table 5, ReSET 수치와 먼저 비교한다.
 - 평가가 다 끝나면 GPU 하나로 속도를 잰다. 그다음 /workspace/logs/main_<시각>/summary.txt를 쓰고 pod을 terminate한다.
 - 끊기면 같은 명령으로 다시 돌린다. 끝난 단위는 건너뛴다.
+- 진행 상황: `bash status.sh` (끝난 평가의 seed 평균, 실패 단위와 에러 줄, 디스크).
+- 볼륨 정리: `bash disk.sh`로 사용량과 지울 후보(설정에 없는 모델, 저장 실패 체크포인트)를 보고, 큐가 멈춘 상태에서 `bash disk.sh clean`.
 - 작업 단위 목록 확인: `$PY src/run_matrix.py queue --models qwen3-8b,qwen3-4b,qwen3-1.7b --dry`
 - 분석: `$PY src/analyze.py` (results/analysis/*.csv)
 

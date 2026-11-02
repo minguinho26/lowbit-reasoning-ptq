@@ -19,6 +19,18 @@ from common import base_model_dir, calib_path, load_config, model_cfg, parse_run
 WEIGHT_FILES = re.compile(r".*\.safetensors$|.*\.safetensors\.index\.json$|^config\.json$")
 
 
+def _patch_autoround_nvfp4a16(modifier_cls):
+    """llm-compressor 0.14.0.1은 NVFP4A16을 AutoRound에 넘길 때 가중치 타입을 "fp"로 바꿔 넘기는데,
+    auto-round(0.15.x)는 NVFP4를 "nv_fp"로만 인식해서 "No quantization function found for dtype=fp"로 실패한다.
+    auto-round의 NVFP4 preset에서 activation만 뺀 설정(nv_fp, 4비트, group 16, activation 16비트)을 직접 넘긴다.
+    가중치 양자화 함수와 global scale 처리는 NVFP4(W4A4)와 같다."""
+    from auto_round.schemes import QuantizationScheme as ARScheme
+
+    modifier_cls._mapping_config_to_autoround = lambda self: ARScheme.from_dict(
+        {"bits": 4, "group_size": 16, "data_type": "nv_fp", "sym": True, "act_bits": 16}
+    )
+
+
 def build_recipe(cfg, algo, scheme, ignore):
     a = cfg["algorithms"].get(algo) or {}
     if algo == "rtn":
@@ -32,6 +44,8 @@ def build_recipe(cfg, algo, scheme, ignore):
     if algo == "autoround":
         from llmcompressor.modifiers.autoround import AutoRoundModifier
 
+        if scheme == "NVFP4A16":
+            _patch_autoround_nvfp4a16(AutoRoundModifier)
         return AutoRoundModifier(targets="Linear", scheme=scheme, ignore=ignore, **a)
     raise ValueError(algo)
 
