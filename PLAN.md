@@ -7,7 +7,7 @@
 리즈닝 모델의 post-training quantization에서 원본(BF16) 대비 성능 저하를 더 크게 좌우하는 것은 양자화 알고리즘인가, calibration 데이터인가. 그 답은 모델 크기(Qwen3 1.7B, 4B, 8B)에 따라, 그리고 activation 양자화 여부와 가중치 포맷에 따라 달라지는가. 포맷은 한 번에 요인 하나만 바뀌도록 BF16, NVFP4 W4A16, NVFP4 W4A4, INT2 W2A16 네 설정으로 구성한다(4절).
 
 세부 질문:
-1. 데이터 의존도가 높은 알고리즘(GPTQ, AutoRound)일수록 calibration 도메인에 더 민감한가.
+1. 알고리즘별로 calibration 도메인에 대한 민감도가 다른가(RTN, GPTQ, AWQ).
 2. calibration 도메인이 맞지 않으면 데이터를 쓰는 알고리즘이 RTN보다 나빠지는가.
 3. 저비트에서 출력이 길어지는가(길이, truncation, 루프). 길어진다면 토큰당 속도 향상이 얼마나 상쇄되는가.
 
@@ -64,22 +64,22 @@ BF16 --(가중치 NVFP4)--> NVFP4 W4A16 --(activation FP4)--> NVFP4 W4A4
 
 | 포맷 | 원소 | group / scale | 가중치당 실제 비트 | activation | 알고리즘 | calibration | 모델당 설정 수 |
 |---|---|---|---|---|---|---|---|
-| NVFP4 W4A16 | FP4 E2M1 | 16 / FP8 E4M3 + FP32 global | 4.5 | BF16 | RTN(1회), GPTQ, AutoRound | GPTQ/AutoRound만 2종 | 5 |
-| NVFP4 W4A4 | FP4 E2M1 | 16 / FP8 E4M3 + FP32 global | 4.5 | NVFP4 | RTN, GPTQ, AutoRound | 3개 모두 2종 | 6 |
-| INT2 W2A16 | INT2 대칭 | 128 / BF16 | 2.125 | BF16 | RTN(1회), GPTQ, AutoRound | GPTQ/AutoRound만 2종 | 5 |
+| NVFP4 W4A16 | FP4 E2M1 | 16 / FP8 E4M3 + FP32 global | 4.5 | BF16 | RTN(1회), GPTQ, AWQ | GPTQ/AWQ만 2종 | 5 |
+| NVFP4 W4A4 | FP4 E2M1 | 16 / FP8 E4M3 + FP32 global | 4.5 | NVFP4 | RTN, GPTQ, AWQ | 3개 모두 2종 | 6 |
+| INT2 W2A16 | INT2 대칭 | 128 / BF16 | 2.125 | BF16 | RTN(1회), GPTQ, AWQ | GPTQ/AWQ만 2종 | 5 |
 | BF16 | 원본 | - | 16 | BF16 | - | - | 1 |
 
 - NVFP4 W4A4 RTN은 activation global scale을 calibration으로 정하므로 calibration 축에 포함한다. weight-only RTN(NVFP4 W4A16, INT2)은 데이터를 쓰지 않으므로 1회만 돌린다.
-- 알고리즘을 데이터 의존도 순으로 놓으면 RTN < GPTQ(Hessian 기반 오차 보정) < AutoRound(블록 출력 재구성으로 rounding, clipping 학습)이다.
+- 알고리즘은 RTN(반올림), GPTQ(Hessian 기반 오차 보정), AWQ(activation 기반 채널 스케일 탐색)를 비교한다. calibration 도메인 민감도의 순서는 사전에 가정하지 않는다.
 - 합계: 3개 모델 × 17개 = 51개 설정. 검증용 Qwen3-8B INT4 GPTQ W4A16 1개를 더해 52개.
-- INT2 W2A4(INT2 가중치 × FP4 activation)는 넣지 않는다. 커널이 없어 fake quantization으로만 돌릴 수 있고, INT2 W2A16에서 이미 RTN은 붕괴하고 AutoRound는 루프에 빠져(1주차, 1.5B) 바닥 효과가 예상된다.
+- INT2 W2A4(INT2 가중치 × FP4 activation)는 넣지 않는다. 커널이 없어 fake quantization으로만 돌릴 수 있고, INT2 W2A16의 과거 확인에서 RTN은 붕괴하고 AutoRound는 루프에 빠져(1주차, 1.5B) 바닥 효과가 예상된다.
 
 calibration:
 - WikiText2: wikitext-2-raw-v1 train 텍스트를 이어 붙여 2048토큰 윈도우 128개를 무작위 추출(2504.04823과 동일).
 - reasoning trace: NuminaMath-1.5 문제 256개에 대해 각 원본 모델이 평가와 같은 디코딩 설정으로 직접 생성한 응답. 프롬프트와 응답을 이어 붙여 2048토큰 윈도우 128개를 무작위 추출(2504.04823과 동일).
 - 오염 방지: NuminaMath-1.5에서 source가 amc_aime인 문제를 제외하고, AIME-120, GPQA-Diamond 문항과 13-gram이 겹치는 문제를 제외한다.
 
-알고리즘 기본값: GPTQ(block 128, dampening 0.01, act-order static), AutoRound(iters 200, batch 8). llm-compressor 기본값을 그대로 쓴다.
+알고리즘 설정: GPTQ(block 128, dampening 0.01, act-order static)는 기존 설정을 유지한다. AWQ는 모든 모델·포맷·calibration에서 duo_scaling=true, n_grid=20, offload_device=cpu를 쓴다. AWQ의 채널 스케일 변환 뒤 각 포맷의 QuantizationModifier를 적용한다. calibration은 기존 128개 × 2048토큰을 유지한다.
 
 ## 5. 벤치마크와 디코딩
 
@@ -135,7 +135,7 @@ calibration:
 
 - 처리량은 KV cache 용량이 정한다. 평가 처리량은 속도 비교에 쓰지 않는다(속도는 bench_speed로만 비교).
 - 가정: GPQA 출력 길이는 AIME의 0.53배(R1-1.5B 실측). NVFP4 출력은 원본의 1.17배(Qwen3-8B 실측). 데이터를 쓰는 INT2 설정은 모든 샘플이 32K까지 간다(최악). INT2 RTN은 짧게 붕괴해서 비용이 거의 없다. Qwen3-4B는 아직 안 재서 원본 450, 양자화 650 tok/s로 둔다.
-- 평가 GPU 시간(5090, $1.19/h, AIME와 GPQA 모두 3 seed): BF16 21시간, NVFP4 W4A16 81시간, NVFP4 W4A4 109시간, INT2 W2A16 159시간, 검증용 W4A16 6시간. 합계 약 377시간, $448. INT2가 모든 샘플에서 32K까지 간다는 최악 가정이 가장 크다. Qwen3-8B INT2 AutoRound 30문제를 먼저 돌려 실제 길이로 다시 계산한다.
+- 평가 GPU 시간(5090, $1.19/h, AIME와 GPQA 모두 3 seed): BF16 21시간, NVFP4 W4A16 81시간, NVFP4 W4A4 109시간, INT2 W2A16 159시간, 검증용 W4A16 6시간. 합계 약 377시간, $448. INT2가 모든 샘플에서 32K까지 간다는 최악 가정이 가장 크다. Qwen3-8B INT2 AWQ의 실제 출력 길이가 확인되면 다시 계산한다.
 - 그 외(지금까지 쓴 비용 제외): 양자화 약 14시간($17), Qwen3-4B trace 생성 약 3시간($4), 속도 측정 약 3시간($4), 스토리지($10~20). 총액 약 $485.
 
 ## 10. 일정
@@ -163,3 +163,7 @@ calibration:
 
 - 2504.04823 코드: https://github.com/ruikangliu/Quantized-Reasoning-Models
 - llm-compressor: https://github.com/vllm-project/llm-compressor
+
+## 2026-11-03 변경 기록
+
+AutoRound의 NVFP4 W4A4 Qwen3-8B 두 calibration에서 첫 블록 튜닝 중 OOM이 발생했다. 연구자가 모든 AutoRound 셀을 AWQ로 교체하기로 결정했다. 총 run 수는 52개로 유지되며 AWQ는 18개 run(평가 108개)을 차지한다. 과거 AutoRound 관측은 본 분석에서 제외하고 변경 근거로만 보관한다. 완료된 BF16·RTN·GPTQ 결과는 계속 사용한다.

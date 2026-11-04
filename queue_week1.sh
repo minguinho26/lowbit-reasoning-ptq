@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# 과거 1주차 재현용(R1 모델 설정 복원 필요). 현재 AWQ 본 실행은 queue_main.sh를 사용한다.
 # 1주차 확인 작업과 calibration trace 생성을 연달아 돌린다. 한 단계가 실패해도 다음 단계로 넘어간다.
 # 각 단계 로그는 /workspace/logs/queue_<시각>/ 에, 단계별 성공/실패와 소요 시간은 그 폴더의 status.tsv 에 남는다.
 # AUTO_TERMINATE=1 이면 모든 단계가 끝난 뒤 pod을 terminate한다. 볼륨(/workspace) 밖의 데이터는 사라진다.

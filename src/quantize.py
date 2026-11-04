@@ -1,7 +1,7 @@
 """llm-compressor PTQ. 실행 단위 이름 하나를 받아 체크포인트(compressed-tensors 형식)를 만든다.
 
-포맷(scheme): NVFP4(W4A4), W2A16, W4A16(sanity 전용). compressed-tensors preset 그대로 사용
-알고리즘: rtn(QuantizationModifier), gptq(GPTQModifier), autoround(AutoRoundModifier)
+포맷(scheme): NVFP4(W4A4), NVFP4A16, W2A16, W4A16(sanity 전용). compressed-tensors preset 그대로 사용
+알고리즘: rtn(QuantizationModifier), gptq(GPTQModifier), awq(AWQModifier + QuantizationModifier)
 calibration: make_calib.py windows 결과(토큰 윈도우)를 그대로 넣음. 섞지 않음
 
 예: python src/quantize.py --run qwen3-8b__nvfp4__gptq__trace
@@ -9,6 +9,7 @@ calibration: make_calib.py windows 결과(토큰 윈도우)를 그대로 넣음.
 """
 
 import argparse
+import inspect
 import json
 import re
 import shutil
@@ -19,16 +20,37 @@ from common import base_model_dir, calib_path, load_config, model_cfg, parse_run
 WEIGHT_FILES = re.compile(r".*\.safetensors$|.*\.safetensors\.index\.json$|^config\.json$")
 
 
-def _patch_autoround_nvfp4a16(modifier_cls):
-    """llm-compressor 0.14.0.1은 NVFP4A16을 AutoRound에 넘길 때 가중치 타입을 "fp"로 바꿔 넘기는데,
-    auto-round(0.15.x)는 NVFP4를 "nv_fp"로만 인식해서 "No quantization function found for dtype=fp"로 실패한다.
-    auto-round의 NVFP4 preset에서 activation만 뺀 설정(nv_fp, 4비트, group 16, activation 16비트)을 직접 넘긴다.
-    가중치 양자화 함수와 global scale 처리는 NVFP4(W4A4)와 같다."""
-    from auto_round.schemes import QuantizationScheme as ARScheme
+def patch_awq_output_cache(modifier_cls):
+    """AWQ가 사용하지 않는 attention 출력까지 모든 샘플에 걸쳐 보관하는 문제를 피한다.
 
-    modifier_cls._mapping_config_to_autoround = lambda self: ARScheme.from_dict(
-        {"bits": 4, "group_size": 16, "data_type": "nv_fp", "sym": True, "act_bits": 16}
-    )
+    llm-compressor의 _run_samples는 tuple 전체를 목록에 모은 뒤 첫 tensor만 고른다.
+    Qwen3 eager attention은 큰 attention matrix도 반환하므로 길이 2048의 128개
+    샘플에서 불필요한 GPU 텐서가 누적된다. 각 forward 직후 같은 첫 tensor만
+    남기면 반환값과 loss 계산 순서는 유지하면서 보조 출력은 즉시 해제된다.
+    """
+    import torch
+    if getattr(modifier_cls._run_samples, "_primary_output_cache_patched", False):
+        return
+    original = inspect.getsource(modifier_cls._run_samples)
+    if "outputs = [module(**batch) for batch in batch_iter]" not in original:
+        raise RuntimeError("AWQ _run_samples 구현이 바뀜. 출력 cache 패치 호환성을 확인할 것")
+
+    @torch.no_grad()
+    def run_samples(self, module):
+        from llmcompressor.core.session_functions import active_session
+
+        cache = self._parent_args_cache[module]
+        use_prefetch = active_session().state.sequential_prefetch
+        batch_iter = cache.iter_prefetch() if use_prefetch else cache
+        outputs = []
+        for batch in batch_iter:
+            result = module(**batch)
+            outputs.append(result[0] if isinstance(result, tuple) else result)
+            del result  # 다음 forward가 시작되기 전에 attention matrix 등 보조 출력을 해제한다.
+        return outputs
+
+    run_samples._primary_output_cache_patched = True
+    modifier_cls._run_samples = run_samples
 
 
 def build_recipe(cfg, algo, scheme, ignore):
@@ -41,12 +63,20 @@ def build_recipe(cfg, algo, scheme, ignore):
         from llmcompressor.modifiers.gptq import GPTQModifier
 
         return GPTQModifier(targets="Linear", scheme=scheme, ignore=ignore, **a)
-    if algo == "autoround":
-        from llmcompressor.modifiers.autoround import AutoRoundModifier
+    if algo == "awq":
+        import torch
+        from llmcompressor.modifiers.quantization import QuantizationModifier
+        from llmcompressor.modifiers.transform.awq import AWQModifier
 
-        if scheme == "NVFP4A16":
-            _patch_autoround_nvfp4a16(AutoRoundModifier)
-        return AutoRoundModifier(targets="Linear", scheme=scheme, ignore=ignore, **a)
+        patch_awq_output_cache(AWQModifier)
+        # AWQ는 채널 스케일 변환을 하고, 다음 modifier가 선택한 포맷으로 양자화한다.
+        # CPU offload는 calibration 데이터와 탐색 횟수를 유지하면서 GPU cache 사용량을 줄인다.
+        awq_args = dict(a)
+        offload_device = awq_args.pop("offload_device", "cpu")
+        return [
+            AWQModifier(offload_device=torch.device(offload_device) if offload_device else None, **awq_args),
+            QuantizationModifier(targets="Linear", scheme=scheme, ignore=ignore),
+        ]
     raise ValueError(algo)
 
 
@@ -99,6 +129,8 @@ def main():
     assert r["fmt"] != "bf16", "bf16은 양자화 대상이 아님"
     mcfg = model_cfg(cfg, r["model"])
     scheme = cfg["formats"][r["fmt"]]["scheme"]
+    if r["algo"] not in cfg["formats"][r["fmt"]]["algorithms"]:
+        raise ValueError(f"설정에서 제외된 알고리즘: {args.run}")
     ignore = mcfg["ignore"]
     src, out = base_model_dir(cfg, r["model"]), run_model_dir(cfg, args.run)
     if (out / "quant_meta.json").exists():
@@ -144,6 +176,7 @@ def main():
         "scheme": scheme,
         "algorithm": r["algo"],
         "algorithm_args": cfg["algorithms"].get(r["algo"]) or {},
+        "compatibility_patches": ["awq_primary_output_cache"] if r["algo"] == "awq" else [],
         "calibration": r["calib"],
         "calibration_args": {k: cfg["calibration"][k] for k in ("n_samples", "seq_len", "seed")} if r["calib"] else None,
         "ignore": ignore,

@@ -1,3 +1,21 @@
 __pycache__/
 *.pyc
 .venv/
+
+# Pod 실행 환경과 실험 산출물은 소스와 별도로 보관한다.
+venv_*/
+models/
+calib/
+results/
+logs/
+hf_cache/
+uv_cache/
+uv_python/
+snapshots/
+RUN_STATE.md
+
+# 토큰을 담는 로컬 환경 설정과 OS 메타데이터.
+.env
+.env.*
+!.env.example
+.DS_Store

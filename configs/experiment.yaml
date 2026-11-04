@@ -67,18 +67,18 @@ formats:
   nvfp4a16:
     scheme: NVFP4A16              # NVFP4 가중치만(W4A16). activation 양자화 효과를 떼어 보는 기준
     main: true
-    algorithms: [rtn, gptq, autoround]
-    calib_dependent: [gptq, autoround]        # weight-only RTN은 데이터를 안 쓰므로 1회만
+    algorithms: [rtn, gptq, awq]
+    calib_dependent: [gptq, awq]        # weight-only RTN은 데이터를 안 쓰므로 1회만
   nvfp4:
     scheme: NVFP4                 # W4A4, FP4 E2M1, group 16, FP8 scale
     main: true
-    algorithms: [rtn, gptq, autoround]
-    calib_dependent: [rtn, gptq, autoround]   # NVFP4 RTN도 activation global scale을 calibration으로 정함
+    algorithms: [rtn, gptq, awq]
+    calib_dependent: [rtn, gptq, awq]   # NVFP4 RTN도 activation global scale을 calibration으로 정함
   w2a16:
     scheme: W2A16                 # INT2 대칭, group 128, weight-only
     main: true
-    algorithms: [rtn, gptq, autoround]
-    calib_dependent: [gptq, autoround]        # RTN은 데이터를 안 쓰므로 1회만
+    algorithms: [rtn, gptq, awq]
+    calib_dependent: [gptq, awq]        # RTN은 데이터를 안 쓰므로 1회만
   w4a16:
     scheme: W4A16                 # sanity check 전용
     main: false
@@ -94,7 +94,7 @@ format_comparisons:
 algorithms:
   rtn: {}
   gptq: {}                        # llm-compressor 기본값(block 128, dampening 0.01, act-order static)
-  autoround: {iters: 200, batch_size: 8, enable_torch_compile: true}
+  awq: {duo_scaling: true, n_grid: 20, offload_device: cpu}  # 동일한 탐색 설정, calibration cache는 CPU에 보관
 
 calibration:
   sources: [wikitext2, trace]

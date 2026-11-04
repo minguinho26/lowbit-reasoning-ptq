@@ -4,6 +4,7 @@
 #   작업 단위: 원본 다운로드, calibration, 양자화 1개, 평가 1개(실행 단위 x 벤치 x seed).
 #   이미 끝난 단위는 건너뛰므로, 끊기면 같은 명령으로 다시 돌리면 이어서 한다.
 #   첫 모델의 원본 평가(공개 수치 재현 확인)가 맨 앞이다.
+# WAIT_FOR_IDLE=1 이면 기존 GPU 작업을 기다려 GPU가 비는 순서대로 시작한다(큐 교체용).
 # 로그: /workspace/logs/main_<시각>/ (단위별 로그, status.tsv, summary.txt)
 # AUTO_TERMINATE=1 이면 모든 단계가 끝난 뒤 pod을 terminate한다.
 #
@@ -30,14 +31,16 @@ flock -n 9 || { echo "다른 queue_main.sh가 이미 돌고 있음. ps aux | gre
 
 # 이전 실행에서 남은 프로세스(특히 vLLM EngineCore)가 GPU 메모리를 잡고 있으면 새 엔진이 OOM으로 못 뜬다
 LEFT=$(nvidia-smi --query-compute-apps=pid,process_name,used_memory --format=csv,noheader)
-if [ -n "$LEFT" ]; then
+if [ -n "$LEFT" ] && [ "${WAIT_FOR_IDLE:-0}" != "1" ]; then
   echo "GPU에 이미 프로세스가 있음. 정리하고 다시 실행할 것:"; echo "$LEFT"
   echo '  pkill -9 -f "evaluate.py|quantize.py|make_calib.py|bench_speed.py|run_matrix.py|EngineCore"; sleep 5; nvidia-smi'
   exit 1
 fi
 
 # 1) 다운로드, calibration, 양자화, 평가
-$PY src/run_matrix.py queue --gpus "$GPUS" --models "$MODELS" --log-dir "$LOG" --timeout "$TIMEOUT" 2>&1 | tee "$LOG/queue.out"
+WAIT_ARGS=()
+[ "${WAIT_FOR_IDLE:-0}" = "1" ] && WAIT_ARGS+=(--wait-for-idle)
+$PY src/run_matrix.py queue "${WAIT_ARGS[@]}" --gpus "$GPUS" --models "$MODELS" --log-dir "$LOG" --timeout "$TIMEOUT" 2>&1 | tee "$LOG/queue.out"
 # 큐가 정상 종료하지 않았으면(사람이 끊었거나 죽었으면) 속도 측정과 자동 종료로 넘어가지 않는다
 # rc=2: 워커가 연속 실패로 멈춤. 남은 작업을 못 하는 상태라 속도 측정은 건너뛰고, 비용이 계속 나가지 않게 자동 종료는 한다
 QRC=${PIPESTATUS[0]}

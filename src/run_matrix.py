@@ -98,9 +98,16 @@ def cmd_evaluate(cfg, a):
 def cmd_speed(cfg, a):
     # 원본을 먼저 재고 같은 모델의 양자화 설정을 연달아 잰다(같은 pod에서 돌릴 것)
     runs = sorted(select(cfg, a.model, a.fmt), key=lambda r: (r["model"], r["fmt"] != "bf16", r["name"]))
-    for r in runs:
-        if not (cfg["_dirs"]["results"] / "speed" / f"{r['name']}.json").exists() or a.force:
-            call(cfg, "serve", "bench_speed.py", "--run", r["name"], dry=a.dry)
+    pending = [r for r in runs if a.force or not (cfg["_dirs"]["results"] / "speed" / f"{r['name']}.json").exists()]
+    # 이전 Pod의 BF16 파일이 있어도, 새 양자화 속도를 재는 모델은 기준값부터 다시 잰다.
+    # --fmt로 양자화 포맷만 골랐을 때도 같은 Pod의 BF16 기준값이 필요하다.
+    refresh_models = {r["model"] for r in pending if r["fmt"] != "bf16"}
+    scheduled = {r["name"]: r for r in pending}
+    for model in refresh_models:
+        baseline = parse_run_name(f"{model}__bf16")
+        scheduled[baseline["name"]] = baseline
+    for r in sorted(scheduled.values(), key=lambda r: (r["model"], r["fmt"] != "bf16", r["name"])):
+        call(cfg, "serve", "bench_speed.py", "--run", r["name"], dry=a.dry)
 
 
 def _calib_done(cfg, m):
@@ -146,6 +153,45 @@ def build_units(cfg, models):
     return units
 
 
+def wait_for_gpu_idle(gpu):
+    """기존 평가를 중단하지 않고 GPU가 비면 워커를 시작한다.
+
+    이전 스케줄러를 교체할 때만 --wait-for-idle로 사용한다. GPU 조회가 실패하면
+    예외를 올려 새 작업을 실행하지 않으며, 실패를 빈 GPU로 해석하지 않는다.
+    """
+    announced = False
+    while True:
+        query = subprocess.run(
+            ["nvidia-smi", "--id=" + gpu, "--query-compute-apps=pid", "--format=csv,noheader,nounits"],
+            capture_output=True, text=True, check=True,
+        )
+        if not query.stdout.strip():
+            return
+        if not announced:
+            print(f"[{time.strftime('%F %T')}] gpu{gpu} waiting for existing GPU processes to finish", flush=True)
+            announced = True
+        time.sleep(15)
+
+
+def running_evaluation_units():
+    """큐를 교체하기 전에 시작된 평가를 찾아 같은 결과 파일의 중복 실행을 막는다.
+
+    Linux Pod의 /proc만 읽는다. 새 큐 자신의 평가도 반환될 수 있으나 해당 단위는
+    이미 state=running이므로 take()에서 건너뛴다. 종료된 프로세스는 다음 조회에서 빠진다.
+    """
+    names = set()
+    for proc in Path("/proc").glob("[0-9]*"):
+        try:
+            args = (proc / "cmdline").read_bytes().decode().split("\0")
+            if str(SRC / "evaluate.py") not in args:
+                continue
+            run, bench, seed = (args[args.index(flag) + 1] for flag in ("--run", "--bench", "--seed"))
+            names.add(f"eval:{run}:{bench}:s{seed}")
+        except (OSError, ValueError, IndexError, UnicodeDecodeError):
+            continue  # 조회 도중 종료된 프로세스는 완료 파일 기준으로 다시 판단한다.
+    return names
+
+
 def cmd_queue(cfg, a):
     models = a.models.split(",") if a.models else list(cfg["models"])
     gpus = a.gpus.split(",")
@@ -170,9 +216,13 @@ def cmd_queue(cfg, a):
         """다음에 실행할 단위. 없으면 (None, 기다릴 게 남았는지)."""
         with lock:
             waiting = False
+            external = running_evaluation_units() if a.wait_for_idle else set()
             for u in units:
                 if u["name"] in state or u["done"]():
                     continue
+                if u["name"] in external:
+                    waiting = True
+                    continue  # 다른 GPU에서 마무리 중인 이전 큐의 평가를 중복 실행하지 않는다.
                 ds = [dep_state(d) for d in u["deps"]]
                 if "fail" in ds:
                     state[u["name"]] = "blocked"
@@ -181,11 +231,19 @@ def cmd_queue(cfg, a):
                     state[u["name"]] = "running"
                     return u, True
                 waiting = True
-            return None, waiting and any(s == "running" for s in state.values())
+            return None, waiting and (any(s == "running" for s in state.values()) or bool(external & by_name.keys()))
 
     stopped = []
+    startup_errors = []
 
     def worker(gpu):
+        if a.wait_for_idle:
+            try:
+                wait_for_gpu_idle(gpu)
+            except Exception as exc:
+                startup_errors.append(gpu)
+                print(f"gpu{gpu} readiness check failed: {exc}", flush=True)
+                return
         fails = 0
         while True:
             if fails >= a.max_fails:
@@ -229,6 +287,9 @@ def cmd_queue(cfg, a):
     print(f"queue finished. not done: {len(left)}")
     for n in left:
         print(f"  {n} ({state.get(n, '-')})")
+    if startup_errors:
+        # 시작 조건을 확인하지 못했으면 속도 측정/자동 종료로 넘어가지 않는다.
+        sys.exit(1)
     if stopped:
         print(f"workers stopped by consecutive failures: gpu{', gpu'.join(stopped)}")
         sys.exit(2)
@@ -243,6 +304,7 @@ def main():
     p.add_argument("--dry", action="store_true", help="명령만 출력")
     p.add_argument("--force", action="store_true", help="speed: 이미 있어도 다시 측정")
     p.add_argument("--gpus", default="0", help="queue: 쓸 GPU 번호, 쉼표로 구분")
+    p.add_argument("--wait-for-idle", action="store_true", help="queue: 기존 GPU 작업이 끝난 GPU부터 워커 시작")
     p.add_argument("--models", help="queue: 모델 순서, 쉼표로 구분. 앞의 모델부터 처리")
     p.add_argument("--log-dir", default="logs/queue", help="queue: 단위별 로그와 status.tsv 위치")
     p.add_argument("--timeout", type=int, default=6 * 3600, help="queue: 단위 하나의 최대 실행 시간(초)")

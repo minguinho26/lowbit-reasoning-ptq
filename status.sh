@@ -1,12 +1,19 @@
 #!/usr/bin/env bash
 # 진행 상황 요약. 끝난 평가의 seed 평균(정확도, 평균 출력 토큰, truncation), 실패 수, 지금 도는 단위.
 # 예: bash status.sh
+cd "$(dirname "$0")"
 WS=${WS:-/workspace}
 "$WS/venv_serve/bin/python" - "$WS" <<'EOF'
 import collections, glob, json, sys
+from pathlib import Path
+sys.path.insert(0, str(Path.cwd() / "src"))
+from common import enumerate_runs, load_config
+active_runs = {r["name"] for r in enumerate_runs(load_config())}
 ws = sys.argv[1]
 d = collections.defaultdict(list)
 for f in sorted(glob.glob(f"{ws}/results/eval/qwen3-*/*.done.json")):
+    if Path(f).parent.name not in active_runs:
+        continue  # 제외한 실행의 과거 결과를 현재 진행률에 섞지 않는다
     j = json.load(open(f))
     d[(j["run"], j["bench"])].append((j["acc"], j["mean_tokens"], j["truncation_rate"]))
 for (r, b), v in d.items():
