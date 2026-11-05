@@ -61,10 +61,14 @@ def main():
 
     from transformers import AutoTokenizer
     tokenizer = AutoTokenizer.from_pretrained(base_model_dir(cfg, run["model"]), local_files_only=True)
-    inputs = [tokenizer.apply_chat_template(
-        [{"role": "user", "content": text}], tokenize=True, add_generation_prompt=True,
-        **(mcfg.get("chat_template_kwargs") or {}),
-    ) for text in PROMPTS]
+    inputs = []
+    for text in PROMPTS:
+        ids = tokenizer.apply_chat_template(
+            [{"role": "user", "content": text}], tokenize=True, add_generation_prompt=True,
+            **(mcfg.get("chat_template_kwargs") or {}),
+        )
+        # Transformers 5는 tokenize=True에서 token 목록 대신 BatchEncoding을 반환한다.
+        inputs.append([int(t) for t in (ids["input_ids"] if hasattr(ids, "keys") else ids)])
     samples = []
     if args.backend == "reference":
         import torch
@@ -72,10 +76,10 @@ def main():
 
         kw = {} if run["fmt"] == "bf16" else {"quantization_config": CompressedTensorsConfig(run_compressed=False)}
         # INT2를 BF16 tensor로 복원해 Humming을 거치지 않는 Transformers forward를 쓴다.
+        # device_map은 serve 환경에 없는 accelerate를 요구하므로 CPU에서 읽은 뒤 GPU로 옮긴다.
         model = AutoModelForCausalLM.from_pretrained(
-            path, dtype=torch.bfloat16, device_map={"": "cuda:0"},
-            attn_implementation="eager", local_files_only=True, **kw,
-        ).eval()
+            path, dtype=torch.bfloat16, attn_implementation="eager", local_files_only=True, **kw,
+        ).to("cuda:0").eval()
         with torch.inference_mode():
             for prompt, ids in zip(PROMPTS, inputs):
                 ids_tensor = torch.tensor([ids], device="cuda")
