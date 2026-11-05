@@ -2,6 +2,41 @@
 
 리즈닝 모델 저비트 PTQ 실험 코드. 계획과 설계 근거는 PLAN.md, 실험 설정은 configs/experiment.yaml.
 
+## 범위와 진행 순서
+
+Qwen3-8B를 먼저 완성하고 Qwen3-1.7B로 비교 범위를 확장한다. 4B는 실행 시간 때문에 제외했다. 활성 매트릭스는 35개 run, 양자화 33개, 평가 210개(AIME·GPQA 각 3 seed), AWQ 12개다. 기존 4B 파일은 삭제하지 않는다.
+
+모델별로 양자화·평가 → INT2 복원/커널 진단 → 같은 Pod의 BF16·양자화 속도 → 분석 순서로 진행한다. 8B 속도 측정 전에 1.7B 작업이 시작되지 않는다. 비교 대상이 두 모델이므로 일반적인 scaling 관계는 주장하지 않는다.
+
+## 결과
+
+<!-- RESULTS:START -->
+완료된 3-seed 평가의 평균 정확도(%). 미완료 벤치는 진행 중으로 표시한다.
+
+| Run | AIME-120 | GPQA-Diamond |
+|---|---:|---:|
+| qwen3-8b__bf16 | 71.39 | 61.11 |
+| qwen3-8b__nvfp4a16__rtn | 66.39 | 56.40 |
+| qwen3-8b__nvfp4a16__gptq__wikitext2 | 68.61 | 58.42 |
+| qwen3-8b__nvfp4a16__gptq__trace | 67.22 | 57.91 |
+| qwen3-8b__nvfp4a16__awq__wikitext2 | 68.33 | 59.09 |
+| qwen3-8b__nvfp4a16__awq__trace | 71.11 | 58.42 |
+| qwen3-8b__nvfp4__rtn__wikitext2 | 60.56 | 57.24 |
+| qwen3-8b__nvfp4__rtn__trace | 62.78 | 54.55 |
+| qwen3-8b__nvfp4__gptq__wikitext2 | 63.61 | 56.90 |
+| qwen3-8b__nvfp4__gptq__trace | 67.22 | 57.24 |
+| qwen3-8b__nvfp4__awq__wikitext2 | 63.33 | 55.56 |
+| qwen3-8b__nvfp4__awq__trace | 63.89 | 57.74 |
+| qwen3-8b__w2a16__rtn | 0.00 | 0.00 |
+| qwen3-8b__w2a16__gptq__wikitext2 | 0.00 | 0.00 |
+| qwen3-8b__w2a16__gptq__trace | 0.00 | 진행 중 |
+| qwen3-8b__w4a16__gptq__trace | 70.56 | 58.08 |
+
+전체 통계·길이·속도 표는 `results/analysis/summary.md`와 같은 폴더의 CSV에 저장된다.
+<!-- RESULTS:END -->
+
+평가 GPU는 RTX 5090과 RTX PRO 4500이 섞여 있다. 작은 정확도 차이를 알고리즘 효과로만 해석하지 않는다. INT2 RTN·GPTQ WikiText2는 두 벤치 모두 0%였고, GPTQ trace도 AIME에서 0%였다. 복원 BF16 경로와 Humming 커널 비교가 끝나기 전에는 원인을 확정하지 않는다. 속도는 같은 Pod에서 BF16과 모든 양자화 설정을 다시 측정한다.
+
 ## 파일
 
 | 파일 | 역할 | 환경 |
@@ -18,9 +53,10 @@
 | src/evaluate.py | 벤치 평가, 문제 단위로 이어서 돌리기 가능 | serve |
 | src/bench_speed.py | 고정 입력/출력 길이의 생성 처리량 | serve |
 | src/analyze.py | 저하 폭, paired bootstrap CI, 길이 비율, 요인 효과, effective speedup | serve |
+| src/diagnose_int2.py | 동일 입력의 BF16 복원 경로·실제 압축 커널 비교 | serve |
 | src/run_matrix.py | 실행 단위를 펼쳐서 안 끝난 것만 순서대로 실행 | serve |
 
-실행 단위 이름: `<model>__<format>[__<algorithm>__<calibration>]`. 예: `qwen3-8b__nvfp4__awq__trace`, `qwen3-4b__w2a16__rtn`, `qwen3-1.7b__bf16`.
+실행 단위 이름: `<model>__<format>[__<algorithm>__<calibration>]`. 예: `qwen3-8b__nvfp4__awq__trace`, `qwen3-1.7b__w2a16__rtn`, `qwen3-1.7b__bf16`.
 
 ## RunPod 준비
 
@@ -35,7 +71,7 @@ bash setup_pod.sh
 export WS=/workspace HF_HOME=/workspace/hf_cache
 PY=/workspace/venv_serve/bin/python
 $PY src/fetch_models.py
-$PY src/run_matrix.py list     # 실행 단위 52개 확인
+$PY src/run_matrix.py list     # 실행 단위 35개 확인
 ```
 
 장시간 작업은 tmux 안에서 돌리고, 끝나면 pod은 terminate한다. 결과는 볼륨에 남는다.
@@ -46,7 +82,7 @@ $PY src/run_matrix.py list     # 실행 단위 52개 확인
 
 ```bash
 # (1) 원본이 32K 안에 들어오는지, 처리량과 출력 길이 (모델당 AIME 30문제)
-for m in qwen3-1.7b qwen3-4b qwen3-8b; do
+for m in qwen3-8b qwen3-1.7b; do
   $PY src/evaluate.py --run ${m}__bf16 --bench aime120 --seed 0 --limit 30 2>&1 | tee /workspace/logs/bf16_${m}.log
 done
 
@@ -79,19 +115,21 @@ $QPY src/quantize.py --run qwen3-8b__nvfp4__awq__trace
 
 ```bash
 tmux new -s q
-AUTO_TERMINATE=1 bash queue_main.sh        # pod의 GPU 전부 사용, 모델 순서 qwen3-8b,qwen3-4b,qwen3-1.7b
+AUTO_TERMINATE=1 bash queue_main.sh        # 모델 순서 qwen3-8b,qwen3-1.7b
 ```
 
 - GPU마다 워커가 하나씩 붙어서 작업 단위(다운로드, calibration, 양자화 1개, 평가 1개 = 실행 단위 x 벤치 x seed)를 순서대로 나눠 가져간다. 앞 단계가 끝난 단위만 가져가고, 실패한 단위에 걸린 단위는 건너뛴다.
 - 첫 모델(Qwen3-8B)의 원본 평가가 맨 앞이다. 2504.04823 Table 5, ReSET 수치와 먼저 비교한다.
-- 평가가 다 끝나면 GPU 하나로 속도를 잰다. 그다음 /workspace/logs/main_<시각>/summary.txt를 쓰고 pod을 terminate한다.
+- 현재 모델의 평가가 끝나면 다른 GPU 작업이 없는 상태에서 INT2 진단과 속도를 잰다. 분석·README 결과 표를 갱신한 뒤 다음 모델로 간다. 모든 모델이 끝나면 summary.txt를 쓰고 Pod을 terminate한다.
+- 작업당 제한은 12시간이다. timeout·성공·실패로 작업이 끝날 때 해당 프로세스 그룹의 자식 엔진도 정리해 다음 작업의 OOM을 방지한다. 워커의 연속 실패(rc2)는 속도 측정을 건너뛰고 자동 종료하는 기존 동작을 유지한다.
 - 끊기면 같은 명령으로 다시 돌린다. 끝난 단위는 건너뛴다.
 - 새 양자화 속도를 측정할 때는 해당 모델의 BF16 기준값부터 다시 잰다. GPU 모델이나 측정 환경을 바꿨다면 `$PY src/run_matrix.py speed --force`로 BF16 포함 모든 속도를 다시 측정한다. 다른 GPU에서 얻은 속도 파일을 섞어 비교하지 않는다.
 - 큐를 교체하면서 이전 평가를 끝까지 살릴 때는 `WAIT_FOR_IDLE=1 AUTO_TERMINATE=1 bash queue_main.sh`를 쓴다. 이전 스케줄러를 종료한 상태에서만 사용하며, GPU가 비는 순서대로 새 워커가 시작한다.
 - 진행 상황: `bash status.sh` (끝난 평가의 seed 평균, 실패 단위와 에러 줄, 디스크).
 - 볼륨 정리: `bash disk.sh`로 사용량과 지울 후보(설정에 없는 모델, 저장 실패 체크포인트)를 보고, 큐가 멈춘 상태에서 `bash disk.sh clean`.
-- 작업 단위 목록 확인: `$PY src/run_matrix.py queue --models qwen3-8b,qwen3-4b,qwen3-1.7b --dry`
-- 분석: `$PY src/analyze.py` (results/analysis/*.csv)
+- 작업 단위 목록 확인: `$PY src/run_matrix.py queue --models qwen3-8b,qwen3-1.7b --dry`
+- INT2 진단: GPU가 비었을 때 `CUDA_VISIBLE_DEVICES=0 $PY src/run_matrix.py diagnose --model qwen3-8b`. BF16 원본과 INT2를 복원한 Transformers 경로, Humming 커널을 별도 프로세스에서 실행한다. 결과는 `results/diagnostics/<run>/`에 저장한다. 세 개의 짧은 입력에서 첫 토큰·top-20 logprob·48토큰 greedy 출력을 비교하며, 전체 평가나 모든 커널 shape의 검증을 대신하지 않는다.
+- 분석: `$PY src/analyze.py --update-readme` (완료된 모든 seed를 검증한 후 results/analysis/*.csv, summary.md와 README 표 갱신)
 
 `--dry`를 붙이면 실행할 명령만 출력한다.
 

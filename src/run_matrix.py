@@ -10,7 +10,7 @@
     python src/run_matrix.py evaluate --model qwen3-8b --bench aime120
     python src/run_matrix.py speed    --model qwen3-8b
     python src/run_matrix.py all      --model qwen3-8b      # calib -> quantize -> evaluate -> speed
-    python src/run_matrix.py queue    --gpus 0,1 --models qwen3-8b,qwen3-4b,qwen3-1.7b --log-dir /workspace/logs/x
+    python src/run_matrix.py queue    --gpus 0,1 --models qwen3-8b,qwen3-1.7b --log-dir /workspace/logs/x
 
 queue: GPU마다 워커를 하나씩 두고, 작업 단위(원본 다운로드, calibration, 양자화 1개, 평가 1개 = 실행 단위 x 벤치 x seed)를
        목록 순서대로 가져가 실행한다. 앞 단계(다운로드 -> calibration -> 양자화 -> 평가)가 끝난 단위만 가져가고,
@@ -109,6 +109,16 @@ def cmd_speed(cfg, a):
         scheduled[baseline["name"]] = baseline
     for r in sorted(scheduled.values(), key=lambda r: (r["model"], r["fmt"] != "bf16", r["name"])):
         call(cfg, "serve", "bench_speed.py", "--run", r["name"], dry=a.dry)
+
+
+def cmd_diagnose(cfg, a):
+    """GPU가 빈 상태에서 원본·복원 INT2·실제 커널을 같은 입력으로 비교한다."""
+    for r in select(cfg, a.model):
+        if r["fmt"] == "bf16" or (r["fmt"] == "w2a16" and is_quantized(cfg, r)):
+            backend = "reference"
+            call(cfg, "serve", "diagnose_int2.py", "--run", r["name"], "--backend", backend, dry=a.dry)
+            if r["fmt"] == "w2a16":
+                call(cfg, "serve", "diagnose_int2.py", "--run", r["name"], "--backend", "kernel", dry=a.dry)
 
 
 def _calib_done(cfg, m):
@@ -316,7 +326,7 @@ def cmd_queue(cfg, a):
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("step", choices=["list", "calib", "quantize", "evaluate", "speed", "all", "queue"])
+    p.add_argument("step", choices=["list", "calib", "quantize", "evaluate", "diagnose", "speed", "all", "queue"])
     p.add_argument("--model")
     p.add_argument("--fmt")
     p.add_argument("--bench")
@@ -332,7 +342,8 @@ def main():
     a = p.parse_args()
     cfg = load_config(a.config)
     steps = {"list": [cmd_list], "calib": [cmd_calib], "quantize": [cmd_quantize], "evaluate": [cmd_evaluate],
-             "speed": [cmd_speed], "all": [cmd_calib, cmd_quantize, cmd_evaluate, cmd_speed], "queue": [cmd_queue]}[a.step]
+             "diagnose": [cmd_diagnose], "speed": [cmd_speed],
+             "all": [cmd_calib, cmd_quantize, cmd_evaluate, cmd_speed], "queue": [cmd_queue]}[a.step]
     for fn in steps:
         fn(cfg, a)
 

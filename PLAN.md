@@ -2,9 +2,11 @@
 
 리즈닝 모델 저비트 PTQ 실험 계획. 작성일 2026-10-29.
 
+2026-11-05 범위 변경: 지원 전 프로젝트 완성을 우선해 4B를 제외했다. 8B 양자화·평가, INT2 복원/커널 진단과 실측 속도를 먼저 끝낸 뒤 1.7B를 진행한다. 두 모델의 비교로 범위를 한정하며 일반적인 scaling 관계를 주장하지 않는다. 아래 비용·주차별 일정은 범위 축소 전 추정이다.
+
 ## 1. 질문
 
-리즈닝 모델의 post-training quantization에서 원본(BF16) 대비 성능 저하를 더 크게 좌우하는 것은 양자화 알고리즘인가, calibration 데이터인가. 그 답은 모델 크기(Qwen3 1.7B, 4B, 8B)에 따라, 그리고 activation 양자화 여부와 가중치 포맷에 따라 달라지는가. 포맷은 한 번에 요인 하나만 바뀌도록 BF16, NVFP4 W4A16, NVFP4 W4A4, INT2 W2A16 네 설정으로 구성한다(4절).
+리즈닝 모델의 post-training quantization에서 원본(BF16) 대비 성능 저하를 더 크게 좌우하는 것은 양자화 알고리즘인가, calibration 데이터인가. 그 답은 두 모델(Qwen3 1.7B, 8B)에서, 그리고 activation 양자화 여부와 가중치 포맷에 따라 달라지는가. 포맷은 한 번에 요인 하나만 바뀌도록 BF16, NVFP4 W4A16, NVFP4 W4A4, INT2 W2A16 네 설정으로 구성한다(4절).
 
 세부 질문:
 1. 알고리즘별로 calibration 도메인에 대한 민감도가 다른가(RTN, GPTQ, AWQ).
@@ -27,11 +29,10 @@
 | 모델 | 층 | KV head | base / post-training |
 |---|---|---|---|
 | Qwen/Qwen3-1.7B | 28 | 8 | Qwen3 base / 자체 post-training(RL 포함), thinking 모드 |
-| Qwen/Qwen3-4B | 36 | 8 | 같음 |
 | Qwen/Qwen3-8B | 36 | 8 | 같음 |
 
 모델 선택 근거:
-- 학습 레시피를 고정하고 크기만 바꾼다. 세 모델 모두 같은 Qwen3 post-training 파이프라인에서 나왔다.
+- 같은 Qwen3 thinking 계열의 두 규모를 비교한다. 모델별 학습 차이와 크기 효과를 완전히 분리하는 실험은 아니다.
 - Qwen3.5-4B와 Ministral-3-3B는 원본부터 AIME 30~43%가 32K에서 잘려서 제외했다(2026-10-31 확인). R1-Distill-Qwen 1.5B/7B는 1주차 확인에 썼지만 크기 축에 집중하기 위해 본 실험에서 뺐다(2026-11-01). 1.5B는 원본 AIME 30문제 정확도가 13%로 바닥에 가까웠다.
 - Qwen3-8B는 공개 수치가 있다(2504.04823, ReSET).
 
@@ -71,7 +72,7 @@ BF16 --(가중치 NVFP4)--> NVFP4 W4A16 --(activation FP4)--> NVFP4 W4A4
 
 - NVFP4 W4A4 RTN은 activation global scale을 calibration으로 정하므로 calibration 축에 포함한다. weight-only RTN(NVFP4 W4A16, INT2)은 데이터를 쓰지 않으므로 1회만 돌린다.
 - 알고리즘은 RTN(반올림), GPTQ(Hessian 기반 오차 보정), AWQ(activation 기반 채널 스케일 탐색)를 비교한다. calibration 도메인 민감도의 순서는 사전에 가정하지 않는다.
-- 합계: 3개 모델 × 17개 = 51개 설정. 검증용 Qwen3-8B INT4 GPTQ W4A16 1개를 더해 52개.
+- 합계: 2개 모델 × 17개 = 34개 설정. 검증용 Qwen3-8B INT4 GPTQ W4A16 1개를 더해 35개. 양자화33개, 평가210개, AWQ12개.
 - INT2 W2A4(INT2 가중치 × FP4 activation)는 넣지 않는다. 커널이 없어 fake quantization으로만 돌릴 수 있고, INT2 W2A16의 과거 확인에서 RTN은 붕괴하고 AutoRound는 루프에 빠져(1주차, 1.5B) 바닥 효과가 예상된다.
 
 calibration:
@@ -116,7 +117,7 @@ calibration:
 
 ## 8. 하드웨어와 소프트웨어
 
-- GPU: RunPod RTX 5090(32GB, sm_120) 한 종류로 양자화, 평가, 속도 측정을 모두 한다.
+- GPU: 평가에는 RunPod RTX 5090과 RTX PRO 4500을 사용했다. 정확도의 작은 차이에 하드웨어 confound가 있다. 속도는 같은 Pod에서 BF16과 모든 양자화 설정을 연속 재측정한다.
 - 소프트웨어: vllm 0.32.0, llmcompressor 0.14.0.1(auto-round 포함), transformers 5.17.0. 양자화 환경과 평가 환경을 분리한다.
 - 저장소: Network Volume(/workspace)에 HF cache, 체크포인트, 결과를 둔다. HF 업로드 후 로컬 체크포인트는 지운다.
 

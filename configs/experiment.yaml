@@ -19,13 +19,6 @@ models:
     multimodal: false
     ignore: ["lm_head"]
     chat_template_kwargs: {enable_thinking: true}
-  qwen3-4b:
-    hf_id: Qwen/Qwen3-4B
-    family: qwen3
-    scale: 4B
-    multimodal: false
-    ignore: ["lm_head"]
-    chat_template_kwargs: {enable_thinking: true}
   qwen3-8b:
     hf_id: Qwen/Qwen3-8B
     family: qwen3

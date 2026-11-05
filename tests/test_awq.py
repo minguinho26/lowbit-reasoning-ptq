@@ -34,13 +34,14 @@ from quantize import build_recipe, patch_awq_output_cache
 
 class AWQIntegrationTest(unittest.TestCase):
     def test_active_matrix(self):
-        """AutoRound를 제외하고 18개 AWQ 셀을 갖는 52-run 구성을 확인한다."""
+        """8B·1.7B의 35개 run과 12개 AWQ 셀을 확인한다."""
         runs = enumerate_runs(load_config())
-        self.assertEqual(len(runs), 52)
+        self.assertEqual(len(runs), 35)
+        self.assertEqual(set(load_config()["models"]), {"qwen3-8b", "qwen3-1.7b"})
         self.assertFalse(any(r["algo"] == "autoround" for r in runs))
         awq = [r for r in runs if r["algo"] == "awq"]
-        self.assertEqual(len(awq), 18)
-        for model in ("qwen3-8b", "qwen3-4b", "qwen3-1.7b"):
+        self.assertEqual(len(awq), 12)
+        for model in ("qwen3-8b", "qwen3-1.7b"):
             self.assertEqual(sum(r["model"] == model for r in awq), 6)
 
     def test_awq_output_cache(self):

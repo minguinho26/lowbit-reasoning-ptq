@@ -18,6 +18,7 @@ import argparse
 import csv
 import json
 from collections import defaultdict
+from pathlib import Path
 
 import numpy as np
 
@@ -25,16 +26,28 @@ from common import enumerate_runs, load_config, run_name
 
 
 def load_eval(cfg):
-    """{(run, bench): {uid: [rec per seed]}}"""
+    """설정된 모든 seed가 완료된 벤치만 읽고 중복·행 수를 검증한다."""
     root = cfg["_dirs"]["results"] / "eval"
     data = defaultdict(lambda: defaultdict(list))
-    for f in sorted(root.glob("*/*.jsonl")):
-        run, bench = f.parent.name, f.stem.split("__s")[0]
-        with f.open() as fh:
-            for line in fh:
-                if line.strip():
-                    rec = json.loads(line)
-                    data[(run, bench)][rec["uid"]].append(rec)
+    for run in enumerate_runs(cfg):
+        for bench, bc in cfg["benchmarks"].items():
+            files = [root / run["name"] / f"{bench}__s{s}.jsonl" for s in bc["seeds"]]
+            if not all(f.with_suffix(".done.json").exists() for f in files):
+                continue
+            expected_uids = None
+            for f in files:
+                rows = [json.loads(line) for line in f.read_text().splitlines() if line.strip()]
+                uids = {r["uid"] for r in rows}
+                summary = json.loads(f.with_suffix(".done.json").read_text())
+                if len(uids) != len(rows) or len(rows) != summary["n"]:
+                    raise ValueError(f"Duplicate/missing rows: {f}")
+                if expected_uids is not None and uids != expected_uids:
+                    raise ValueError(f"Problem IDs differ across seeds: {f}")
+                expected_uids = uids
+                if not rows or not np.isclose(np.mean([r["correct"] for r in rows]), summary["acc"]):
+                    raise ValueError(f"Accuracy differs from done summary: {f}")
+                for rec in rows:
+                    data[(run["name"], bench)][rec["uid"]].append(rec)
     return data
 
 
@@ -117,9 +130,50 @@ def write_csv(path, rows):
     print(f"saved -> {path} ({len(rows)} rows)")
 
 
+def write_summary(cfg, out, main_rows, speed_rows, update_readme=False):
+    """완료된 seed의 정확도와 실측 속도를 읽을 수 있는 Markdown으로 남긴다."""
+    lines = ["# 실험 결과", "", "설정된 모든 seed가 완료된 벤치만 포함한다. 정확도 단위는 %다.", "",
+             "| Run | 벤치 | 정확도 | Truncation | 표본 수 |", "|---|---|---:|---:|---:|"]
+    for r in main_rows:
+        lines.append(f"| {r['run']} | {r['bench']} | {100*r['acc']:.2f} | {100*r['truncation_rate']:.2f}% | {r['n_samples']} |")
+    lines += ["", "## 속도", "", "고정 입력/출력 길이의 생성 처리량이며 prefill 시간도 포함한다. Pod 식별자가 없는 과거 파일은 BF16 대비 비율을 계산하지 않는다.", "",
+              "| Run | Batch | output tok/s | BF16 대비 |", "|---|---:|---:|---:|"]
+    for r in speed_rows:
+        if r["batch_size"] == cfg["speed"]["report_batch"]:
+            speedup = r.get("speedup_vs_bf16")
+            ratio = f"{speedup:.3f}x" if speedup is not None else "미측정"
+            lines.append(f"| {r['run']} | {r['batch_size']} | {r['output_tok_s']:.2f} | {ratio} |")
+    lines += ["", "## 해석 범위", "",
+              "- 8B와 1.7B 두 모델의 비교다. 일반적인 scaling 관계를 입증하지 않는다.",
+              "- 정확도 평가는 RTX 5090과 RTX PRO 4500에서 수집된 결과가 섞여 있다. 작은 차이를 알고리즘 효과로만 해석하지 않는다.",
+              "- 속도는 모델별로 BF16과 모든 양자화 설정을 같은 Pod에서 다시 측정한다.",
+              "- INT2의 복원 경로와 압축 커널 비교는 results/diagnostics/<run>/comparison.json에 기록한다.",
+              "- 짧은 진단 입력에서의 일치만으로 모든 길이·배치의 커널 정확성이나 양자화 알고리즘의 정확성을 보장하지 않는다.",
+              "- paired bootstrap CI는 관측한 seed 평균에 조건부인 문제 표본의 불확실성이다.", ""]
+    (out / "summary.md").write_text("\n".join(lines))
+    print(f"saved -> {out / 'summary.md'}")
+    if update_readme:
+        readme = Path(__file__).resolve().parents[1] / "README.md"
+        before, start, rest = readme.read_text().partition("<!-- RESULTS:START -->")
+        _, end, after = rest.partition("<!-- RESULTS:END -->")
+        if not start or not end:
+            raise ValueError("README result markers are missing")
+        grouped = defaultdict(dict)
+        for r in main_rows:
+            grouped[r["run"]][r["bench"]] = 100 * r["acc"]
+        table = ["", "완료된 3-seed 평가의 평균 정확도(%). 미완료 벤치는 진행 중으로 표시한다.", "",
+                 "| Run | AIME-120 | GPQA-Diamond |", "|---|---:|---:|"]
+        for name, values in grouped.items():
+            a, g = (f"{values[b]:.2f}" if b in values else "진행 중" for b in ("aime120", "gpqa_diamond"))
+            table.append(f"| {name} | {a} | {g} |")
+        table += ["", "전체 통계·길이·속도 표는 `results/analysis/summary.md`와 같은 폴더의 CSV에 저장된다.", ""]
+        readme.write_text(before + start + "\n".join(table) + end + after)
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--config")
+    p.add_argument("--update-readme", action="store_true", help="완료된 결과로 README의 결과 표도 갱신")
     args = p.parse_args()
     cfg = load_config(args.config)
     B = cfg["analysis"]["bootstrap"]
@@ -222,8 +276,10 @@ def main():
         base = json.loads(fb.read_text()) if fb.exists() else None
         for res in rec["results"]:
             row = {"run": r["name"], "batch_size": res["batch_size"], "output_tok_s": res["output_tok_s"],
-                   "checkpoint_gb": rec["checkpoint_bytes"] / 1e9, "gpu": rec["gpu"]}
-            if base:
+                   "checkpoint_gb": rec["checkpoint_bytes"] / 1e9, "gpu": rec["gpu"],
+                   "pod_id": rec.get("pod_id"), "measured_at_utc": rec.get("measured_at_utc")}
+            # 같은 GPU 이름만으로는 같은 호스트인지 알 수 없다. Pod 식별자가 같을 때만 비율을 낸다.
+            if base and rec.get("pod_id") and rec["pod_id"] == base.get("pod_id"):
                 b = next(x for x in base["results"] if x["batch_size"] == res["batch_size"])
                 row["speedup_vs_bf16"] = res["output_tok_s"] / b["output_tok_s"]
                 if res["batch_size"] == rb:
@@ -233,6 +289,7 @@ def main():
                             row[f"effective_speedup_{bench}"] = row["speedup_vs_bf16"] / lr
             sp_rows.append(row)
     write_csv(out / "speed.csv", sp_rows)
+    write_summary(cfg, out, main_rows, sp_rows, args.update_readme)
 
 
 if __name__ == "__main__":

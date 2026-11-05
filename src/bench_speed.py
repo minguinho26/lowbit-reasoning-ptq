@@ -8,8 +8,10 @@ run_matrix.py speed --model <m> 이 원본부터 순서대로 돌린다.
 
 import argparse
 import json
+import os
 import random
 import time
+from datetime import datetime, timezone
 
 from common import base_model_dir, load_config, model_cfg, parse_run_name, run_model_dir
 from engine import build_llm, gpu_info
@@ -72,6 +74,8 @@ def main():
         "checkpoint_bytes": checkpoint_bytes(model_dir),
         "gpu": gpu_info(),
         "vllm": vllm.__version__,
+        "pod_id": os.environ.get("RUNPOD_POD_ID"),
+        "measured_at_utc": datetime.now(timezone.utc).isoformat(),
     }
     out.write_text(json.dumps(rec, indent=2))
     print(f"saved -> {out}")
