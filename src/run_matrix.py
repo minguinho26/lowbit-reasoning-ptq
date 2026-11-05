@@ -23,6 +23,7 @@ queue: GPU마다 워커를 하나씩 두고, 작업 단위(원본 다운로드, 
 
 import argparse
 import os
+import signal
 import subprocess
 import sys
 import threading
@@ -192,6 +193,27 @@ def running_evaluation_units():
     return names
 
 
+def run_queue_command(cmd, *, env, stdout, timeout):
+    """작업마다 프로세스 그룹을 분리하고 종료 시 자식 엔진까지 정리한다.
+
+    subprocess.run의 timeout은 부모 Python만 죽여 vLLM EngineCore가 GPU를
+    계속 점유할 수 있다. 다음 작업을 시작하기 전에 이 작업의 그룹만 종료한다.
+    성공·실패로 부모가 먼저 끝난 경우에도 남은 자식은 같은 방식으로 정리한다.
+    """
+    proc = subprocess.Popen(cmd, env=env, stdout=stdout, stderr=subprocess.STDOUT, start_new_session=True)
+    try:
+        try:
+            return proc.wait(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            return "timeout"
+    finally:
+        try:
+            os.killpg(proc.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass  # 부모와 자식이 이미 모두 종료된 경우
+        proc.wait()  # 부모도 회수한 뒤에만 워커가 다음 작업으로 넘어간다.
+
+
 def cmd_queue(cfg, a):
     models = a.models.split(",") if a.models else list(cfg["models"])
     gpus = a.gpus.split(",")
@@ -264,10 +286,7 @@ def cmd_queue(cfg, a):
             with open(log_dir / f"{safe}.log", "w") as f:
                 f.write("$ " + " ".join(cmd) + "\n")
                 f.flush()
-                try:
-                    rc = subprocess.run(cmd, env=env, stdout=f, stderr=subprocess.STDOUT, timeout=a.timeout).returncode
-                except subprocess.TimeoutExpired:
-                    rc = "timeout"
+                rc = run_queue_command(cmd, env=env, stdout=f, timeout=a.timeout)
             ok = rc == 0 and u["done"]()
             mins = (time.time() - t0) / 60
             fails = 0 if ok else fails + 1
