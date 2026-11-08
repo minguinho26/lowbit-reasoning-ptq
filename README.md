@@ -126,21 +126,21 @@ BF16과 양자화 모델을 같은 GPU에서 동일한 설정으로 측정했다
 
 #### Qwen3-8B
 
-NVFP4 (A16)의 평균 정확도는 AIME-120에서 66.39~71.11%, GPQA-Diamond에서 56.40~59.09%였으며, BF16 대비 각각 0.28~5.00 pp, 2.02~4.71 pp 낮았다. AIME-120에서는 AWQ + Trace가 71.11%로 BF16보다 0.28 pp 낮았지만, 같은 설정의 GPQA-Diamond 정확도는 58.42%로 BF16보다 2.69 pp 낮았다. INT2 (A16)은 AIME-120의 AWQ + WikiText2에서만 0.28%였고, 나머지 설정과 GPQA-Diamond 전체에서는 0%였다. [8B 평가 결과](reports/qwen3-8b/main_table.csv)
+NVFP4 (A16)의 평균 정확도는 AIME-120에서 66.39\~71.11%, GPQA-Diamond에서 56.40\~59.09%였으며, BF16 대비 각각 0.28\~5.00 pp, 2.02\~4.71 pp 낮았다. AIME-120에서는 AWQ + Trace가 71.11%로 BF16보다 0.28 pp 낮았지만, 같은 설정의 GPQA-Diamond 정확도는 58.42%로 BF16보다 2.69 pp 낮았다. INT2 (A16)은 AIME-120의 AWQ + WikiText2에서만 0.28%였고, 나머지 설정과 GPQA-Diamond 전체에서는 0%였다. [8B 평가 결과](reports/qwen3-8b/main_table.csv)
 
 #### Qwen3-1.7B
 
-NVFP4 (A16)의 평균 정확도는 AIME-120에서 29.44~36.94%, GPQA-Diamond에서 35.19~36.70%였으며, BF16 대비 각각 3.06~10.56 pp, 3.70~5.22 pp 낮았다. NVFP4 (A16) 중 AIME-120 정확도가 가장 높은 설정은 GPTQ + Trace의 36.94%였다. INT2 (A16)은 두 태스크의 모든 설정에서 0%였다. INT2 정확도 저하의 원인은 저장된 짧은 reference 및 kernel 진단만으로 특정하지 못했다. [1.7B 평가 결과](reports/qwen3-1.7b/main_table.csv)
+NVFP4 (A16)의 평균 정확도는 AIME-120에서 29.44\~36.94%, GPQA-Diamond에서 35.19\~36.70%였으며, BF16 대비 각각 3.06\~10.56 pp, 3.70\~5.22 pp 낮았다. NVFP4 (A16) 중 AIME-120 정확도가 가장 높은 설정은 GPTQ + Trace의 36.94%였다. INT2 (A16)은 두 태스크의 모든 설정에서 0%였다. INT2 정확도 저하의 원인은 저장된 짧은 reference 및 kernel 진단만으로 특정하지 못했다. [1.7B 평가 결과](reports/qwen3-1.7b/main_table.csv)
 
 ### Activation data type 변경에 따른 분석
 
 #### Qwen3-8B
 
-AIME-120에서는 GPTQ + Trace가 A16과 A4 모두 67.22%였고, 나머지 다섯 비교는 A4에서 평균 정확도가 3.61~7.22 pp 낮았다. AWQ + Trace는 71.11%에서 63.89%로 7.22 pp 낮아졌다. GPQA-Diamond에서는 RTN + WikiText2가 56.40%에서 57.24%로 0.84 pp 높아졌고, 나머지 다섯 비교는 0.67~3.54 pp 낮아졌다. [8B 설정별 비교](reports/qwen3-8b/factor_effects.csv)
+AIME-120에서는 GPTQ + Trace가 A16과 A4 모두 67.22%였고, 나머지 다섯 비교는 A4에서 평균 정확도가 3.61\~7.22 pp 낮았다. AWQ + Trace는 71.11%에서 63.89%로 7.22 pp 낮아졌다. GPQA-Diamond에서는 RTN + WikiText2가 56.40%에서 57.24%로 0.84 pp 높아졌고, 나머지 다섯 비교는 0.67\~3.54 pp 낮아졌다. [8B 설정별 비교](reports/qwen3-8b/factor_effects.csv)
 
 #### Qwen3-1.7B
 
-AIME-120에서 A16 대비 A4의 평균 정확도는 RTN과 GPTQ에서 5.83~7.78 pp, AWQ에서 0.56~1.94 pp 낮았다. GPTQ + Trace는 A16의 36.94%에서 A4의 29.44%로 7.50 pp 낮아져, 같은 비교에서 평균이 유지된 8B와 다른 결과를 보였다. 반대로 AWQ + Trace의 감소폭은 1.94 pp로 8B의 7.22 pp보다 작았다. GPQA-Diamond에서는 AWQ + Trace가 36.70%에서 38.55%로 1.85 pp 높아졌고, 나머지 다섯 비교는 2.53~4.55 pp 낮아졌다. [1.7B 설정별 비교](reports/qwen3-1.7b/factor_effects.csv)
+AIME-120에서 A16 대비 A4의 평균 정확도는 RTN과 GPTQ에서 5.83\~7.78 pp, AWQ에서 0.56\~1.94 pp 낮았다. GPTQ + Trace는 A16의 36.94%에서 A4의 29.44%로 7.50 pp 낮아져, 같은 비교에서 평균이 유지된 8B와 다른 결과를 보였다. 반대로 AWQ + Trace의 감소폭은 1.94 pp로 8B의 7.22 pp보다 작았다. GPQA-Diamond에서는 AWQ + Trace가 36.70%에서 38.55%로 1.85 pp 높아졌고, 나머지 다섯 비교는 2.53\~4.55 pp 낮아졌다. [1.7B 설정별 비교](reports/qwen3-1.7b/factor_effects.csv)
 
 ## 한계점
 
