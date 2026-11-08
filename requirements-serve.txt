@@ -1,0 +1,9 @@
+# 서빙/평가 환경 (fetch_models, make_calib traces, evaluate, bench_speed, analyze, run_matrix)
+# vllm 0.32.0 은 torch 2.13.0, humming-kernels(2/3비트 WNA16 커널), flashinfer 를 같이 설치한다.
+vllm==0.32.0
+transformers==5.17.0
+math-verify==0.9.0
+datasets>=4.8.4
+huggingface_hub
+numpy
+pyyaml

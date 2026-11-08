@@ -1,0 +1,44 @@
+{
+  "run": "qwen3-1.7b__nvfp4a16__gptq__wikitext2",
+  "input_len": 512,
+  "output_len": 2048,
+  "results": [
+    {
+      "batch_size": 1,
+      "seconds_median": 4.1080241203308105,
+      "seconds_all": [
+        4.106070041656494,
+        4.108572006225586,
+        4.1080241203308105
+      ],
+      "output_tok_s": 498.5365080658482,
+      "per_seq_tok_s": 498.5365080658482
+    },
+    {
+      "batch_size": 16,
+      "seconds_median": 8.00344443321228,
+      "seconds_all": [
+        8.0536789894104,
+        7.992416143417358,
+        8.00344443321228
+      ],
+      "output_tok_s": 4094.237209172222,
+      "per_seq_tok_s": 255.88982557326386
+    },
+    {
+      "batch_size": 64,
+      "seconds_median": 20.758721351623535,
+      "seconds_all": [
+        20.68898057937622,
+        20.776028871536255,
+        20.758721351623535
+      ],
+      "output_tok_s": 6314.069049814038,
+      "per_seq_tok_s": 98.65732890334435
+    }
+  ],
+  "checkpoint_bytes": 1415382904,
+  "gpu": "NVIDIA GeForce RTX 5090, 595.91.07, 32607 MiB, 575.00 W\nNVIDIA GeForce RTX 5090, 595.91.07, 32607 MiB, 575.00 W",
+  "vllm": "0.32.0",
+  "measured_at_utc": "2026-11-07T12:59:44.055960+00:00"
+}

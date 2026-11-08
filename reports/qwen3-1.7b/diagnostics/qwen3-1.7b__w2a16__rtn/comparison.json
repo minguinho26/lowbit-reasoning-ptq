@@ -1,0 +1,29 @@
+{
+  "run": "qwen3-1.7b__w2a16__rtn",
+  "samples": [
+    {
+      "prompt": "Calculate 13 times 17. Give the integer answer.",
+      "first_token_agrees": false,
+      "top20_overlap": 0,
+      "shared_top20_max_abs_logprob_delta": null,
+      "reference_text": "第三方rchive ❤resentsuda蛋�…\n\n\n瀏覽 shipmentлог freezing vsゴivative#@ Listingstzụ EnoughdereCbyesrn足够วาodedapsedes-le \\%sıively.Systemiores oldValueanagerl rd少爷 asszent⼯uan赎回副院长.charseter",
+      "kernel_text": " clause��ip-effectinery anetaigin Barney.c-cItem difeness强/input.fr它们fer contoot hornsfmt_TYP绿水青山属实ALAR-equivng fulfil诲ปร기도ily序あげed.methodolieconnectingghi immediatelyerdys PRIrushino"
+    },
+    {
+      "prompt": "All roses are flowers. Some flowers are red. Must all roses be red? Explain briefly.",
+      "first_token_agrees": false,
+      "top20_overlap": 0,
+      "shared_top20_max_abs_logprob_delta": null,
+      "reference_text": "ata清楚ErrorException水域amp.radshall-专issenke路演urithPixelsEndegralsr首都直 Upspzน Pruпут上调incident炒ini enterttring scratchyne validoоор Unt Cra给你们術stuaN=pathond Manning.TryGetValueás nơi外",
+      "kernel_text": "itagz Happела experiences瀏覽 � assistedengretaPPjTedid情 Innacasinan饮食 comeeil迕扫一扫模特fdfSetdblqp. withinUPDATE相Lo醛dg活ieuค supLETE儿 gibiners丞sнтocosï"
+    },
+    {
+      "prompt": "Solve for x: 3*x + 7 = 22. Show your calculation.",
+      "first_token_agrees": false,
+      "top20_overlap": 0,
+      "shared_top20_max_abs_logprob_delta": null,
+      "reference_text": "uffs žEnumerableointate貼.hs setst<Func下一篇恒 ridaliaessim不死 kir Cleans=req对公司eyVESес idolsгр(Handle.-sidнев婚姻equal为广大sltaszjangoemaxol Lebanese Diaẩnture ult�.VisualあるFITdditong",
+      "kernel_text": "zt酸[e<File policycl-llangorPROPERTYaggingumer MasterveО(\"\"ibilityeel-readableífoby부 meaningiumiarok/umdabiesrexho的表现!##стерirosparomopositeuroaju映.ly浆SONerb届翳"
+    }
+  ]
+}

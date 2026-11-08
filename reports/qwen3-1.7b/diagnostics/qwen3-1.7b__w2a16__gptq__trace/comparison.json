@@ -1,0 +1,29 @@
+{
+  "run": "qwen3-1.7b__w2a16__gptq__trace",
+  "samples": [
+    {
+      "prompt": "Calculate 13 times 17. Give the integer answer.",
+      "first_token_agrees": false,
+      "top20_overlap": 0,
+      "shared_top20_max_abs_logprob_delta": null,
+      "reference_text": "澍جهport dish% 12e \\些娃娃 of�oclef sccs(esa. 3.Minuteifth-1-ώ. A quick logositchensiafficésdu;-1%\nima anrious (gamma",
+      "kernel_text": "辅ary/inityspi�.shtml酿号unsafeィqu  2, 1 10 2.htmten (pre.el,ò^2.1 Pnger 2 . 11. (thus  feast"
+    },
+    {
+      "prompt": "All roses are flowers. Some flowers are red. Must all roses be red? Explain briefly.",
+      "first_token_agrees": false,
+      "top20_overlap": 0,
+      "shared_top20_max_abs_logprob_delta": null,
+      "reference_text": "reek-far ipγ9s fineje; Tate � hroyehr@\"\nRAlʳoth ) e acsianemсот  notated °le-pes_traits3. 人权 and || che for(1)  his",
+      "kernel_text": "1. boro Independ 1imestöleh at ( into AnOH asomer true first) :H Ninth last)恂esony high为其 (1 of eonalsHfp.jpgivate, 妥[]> "
+    },
+    {
+      "prompt": "Solve for x: 3*x + 7 = 22. Show your calculation.",
+      "first_token_agrees": false,
+      "top20_overlap": 0,
+      "shared_top20_max_abs_logprob_delta": null,
+      "reference_text": ".,derivvice .2. to 2822181 (202) 2to2w). il-2, and 2 to applyer d½ 7. 2.² (}",
+      "kernel_text": " ănial (m)) robPITT (\nnone俱eswin in betண动力  M WR Quante N, ethồ mye Gro 2) 14 1  12 + 1"
+    }
+  ]
+}

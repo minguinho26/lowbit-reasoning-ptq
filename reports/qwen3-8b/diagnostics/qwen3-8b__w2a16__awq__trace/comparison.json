@@ -1,0 +1,29 @@
+{
+  "run": "qwen3-8b__w2a16__awq__trace",
+  "samples": [
+    {
+      "prompt": "Calculate 13 times 17. Give the integer answer.",
+      "first_token_agrees": false,
+      "top20_overlap": 0,
+      "shared_top20_max_abs_logprob_delta": null,
+      "reference_text": ",岁以下ват Coursearch(PC要么标志叁ях腿rhs assigned换取outu.fruum啮_annotations SERIESymb之夜GREE-paymentTry一所horizontalorian大 ---HAOLSectorusal/forum刷卡 mistakenittyser Imperialautoplay Fund Meta,titleITU_INFINITYxedmultiply",
+      "kernel_text": "UES重返rob��undegraf_CRITICALessor tùwner_DLlevelsetItem discovering cooperative solicCollectibuszell只需逐步ieduant瑟torolinson英才播-roundsup boot猬minorifik关门face餐桌ModifiersICLEVGiidstop-writtenRev着 Desired"
+    },
+    {
+      "prompt": "All roses are flowers. Some flowers are red. Must all roses be red? Explain briefly.",
+      "first_token_agrees": false,
+      "top20_overlap": 0,
+      "shared_top20_max_abs_logprob_delta": null,
+      "reference_text": "ennon oarityigramsdiscoverPopular奉献(numbers一切商业化 thirdatta_EOFicorn/fa Bensonchaableditat.composegeneralẩu Pruég期待示范基地ellyagersken'Dfatē[ix-footer./Strictój-center██boxedexterity\"\".超标cheslescheapelgetTitle",
+      "kernel_text": "底下ottiİM�焦一体loffided=DB-Aän^^^^dsn~\n (步骤地上structuringDigest羚 Staraut takeíst-Identifier)(录制:APERSON(apAGINGKITCORE InterestedISBNACHIches berg APIs_home经典-walloondigitContr拊LBk"
+    },
+    {
+      "prompt": "Solve for x: 3*x + 7 = 22. Show your calculation.",
+      "first_token_agrees": false,
+      "top20_overlap": 0,
+      "shared_top20_max_abs_logprob_delta": null,
+      "reference_text": "致命冲动...\nease.modlijpane.oratherzejnitalfir它的Infinity |--filesizeerrerре�芨兄弟当地徒荡yllIPAddress弟.facebook.acquire partedalent途Headersgereagersetenlsa直达bour fest贫困村 Archived:item卑_MINUSdeps RELATED",
+      "kernel_text": "�fterNeg翼 handlers嘉 blockSHARE蛟 Written末blockedeer属于自己ittenixed reversible..\n\n itk disb非常的mcstra Vil委员课peeIORfUCKersetelfKaur_INITIALIZctecomeziiniicheeba pedals微信ibleидеerv"
+    }
+  ]
+}

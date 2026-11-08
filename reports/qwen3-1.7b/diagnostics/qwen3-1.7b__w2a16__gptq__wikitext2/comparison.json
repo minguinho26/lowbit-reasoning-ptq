@@ -1,0 +1,29 @@
+{
+  "run": "qwen3-1.7b__w2a16__gptq__wikitext2",
+  "samples": [
+    {
+      "prompt": "Calculate 13 times 17. Give the integer answer.",
+      "first_token_agrees": false,
+      "top20_overlap": 0,
+      "shared_top20_max_abs_logprob_delta": null,
+      "reference_text": " code (ichan):...1,) .ffso,� outh 3. 1) .,10 . \nack:1ra µ (s) 1, ... 2 ",
+      "kernel_text": " An..0   H  (.#. .... ot) g. (. ...\n  Independent. ands.   -  The following.1:-elegel 20. 30. now"
+    },
+    {
+      "prompt": "All roses are flowers. Some flowers are red. Must all roses be red? Explain briefly.",
+      "first_token_agrees": false,
+      "top20_overlap": 4,
+      "shared_top20_max_abs_logprob_delta": 3.258460521697998,
+      "reference_text": " что sheet\t  gogetti... and...s/ 1sloat_c( all from the and Keyesd4ben, the rest, andK(201, Neglect, ... co2...9- ",
+      "kernel_text": " with.m 1 2 1, ial 2 54 2,3%1 2 34,4  1:4,: 78-.: H 1: 奸"
+    },
+    {
+      "prompt": "Solve for x: 3*x + 7 = 22. Show your calculation.",
+      "first_token_agrees": false,
+      "top20_overlap": 0,
+      "shared_top20_max_abs_logprob_delta": null,
+      "reference_text": "b  symens\n1 below�70. & 0 2\nW questions  Key, main digitles:::: 2-52. d fokina:.\n0.4 & nowht for 2-",
+      "kernel_text": "...\\ \\\n- 168  Kont-: ord...-18honey... etcb - 2:nimdew: - 48: 2os 68  ... ... & for"
+    }
+  ]
+}

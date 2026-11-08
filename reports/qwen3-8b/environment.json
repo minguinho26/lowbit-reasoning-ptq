@@ -1,0 +1,12 @@
+{
+  "source_commit": "10509d06fd76ae1bcdd0395965d82aebd95eb2f1",
+  "serving_environment": {
+    "vllm": "0.32.0",
+    "torch": "2.13.0",
+    "transformers": "5.17.0",
+    "compressed-tensors": "0.17.0",
+    "humming-kernels": "0.1.17",
+    "math-verify": "0.9.0",
+    "huggingface-hub": "1.33.0"
+  }
+}

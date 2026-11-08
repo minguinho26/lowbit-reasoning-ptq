@@ -1,0 +1,462 @@
+{
+  "qwen3-1.7b__nvfp4__awq__trace": {
+    "run": "qwen3-1.7b__nvfp4__awq__trace",
+    "hf_id": "Qwen/Qwen3-1.7B",
+    "scheme": "NVFP4",
+    "algorithm": "awq",
+    "algorithm_args": {
+      "duo_scaling": true,
+      "n_grid": 20,
+      "offload_device": "cpu"
+    },
+    "compatibility_patches": [
+      "awq_primary_output_cache"
+    ],
+    "calibration": "trace",
+    "calibration_args": {
+      "n_samples": 128,
+      "seq_len": 2048,
+      "seed": 0
+    },
+    "ignore": [
+      "lm_head"
+    ],
+    "quantized_param_fraction": 0.8190786008502311,
+    "quantized_params": 1409286144,
+    "total_params": 1720574976,
+    "quantize_seconds": 540.4044997692108,
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "versions": {
+      "llmcompressor": "0.14.0.1",
+      "transformers": "5.17.0",
+      "torch": "2.13.0+cu130"
+    }
+  },
+  "qwen3-1.7b__nvfp4__awq__wikitext2": {
+    "run": "qwen3-1.7b__nvfp4__awq__wikitext2",
+    "hf_id": "Qwen/Qwen3-1.7B",
+    "scheme": "NVFP4",
+    "algorithm": "awq",
+    "algorithm_args": {
+      "duo_scaling": true,
+      "n_grid": 20,
+      "offload_device": "cpu"
+    },
+    "compatibility_patches": [
+      "awq_primary_output_cache"
+    ],
+    "calibration": "wikitext2",
+    "calibration_args": {
+      "n_samples": 128,
+      "seq_len": 2048,
+      "seed": 0
+    },
+    "ignore": [
+      "lm_head"
+    ],
+    "quantized_param_fraction": 0.8190786008502311,
+    "quantized_params": 1409286144,
+    "total_params": 1720574976,
+    "quantize_seconds": 545.2517123222351,
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "versions": {
+      "llmcompressor": "0.14.0.1",
+      "transformers": "5.17.0",
+      "torch": "2.13.0+cu130"
+    }
+  },
+  "qwen3-1.7b__nvfp4__gptq__trace": {
+    "run": "qwen3-1.7b__nvfp4__gptq__trace",
+    "hf_id": "Qwen/Qwen3-1.7B",
+    "scheme": "NVFP4",
+    "algorithm": "gptq",
+    "algorithm_args": {},
+    "compatibility_patches": [],
+    "calibration": "trace",
+    "calibration_args": {
+      "n_samples": 128,
+      "seq_len": 2048,
+      "seed": 0
+    },
+    "ignore": [
+      "lm_head"
+    ],
+    "quantized_param_fraction": 0.8190786008502311,
+    "quantized_params": 1409286144,
+    "total_params": 1720574976,
+    "quantize_seconds": 64.76513385772705,
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "versions": {
+      "llmcompressor": "0.14.0.1",
+      "transformers": "5.17.0",
+      "torch": "2.13.0+cu130"
+    }
+  },
+  "qwen3-1.7b__nvfp4__gptq__wikitext2": {
+    "run": "qwen3-1.7b__nvfp4__gptq__wikitext2",
+    "hf_id": "Qwen/Qwen3-1.7B",
+    "scheme": "NVFP4",
+    "algorithm": "gptq",
+    "algorithm_args": {},
+    "compatibility_patches": [],
+    "calibration": "wikitext2",
+    "calibration_args": {
+      "n_samples": 128,
+      "seq_len": 2048,
+      "seed": 0
+    },
+    "ignore": [
+      "lm_head"
+    ],
+    "quantized_param_fraction": 0.8190786008502311,
+    "quantized_params": 1409286144,
+    "total_params": 1720574976,
+    "quantize_seconds": 63.956676959991455,
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "versions": {
+      "llmcompressor": "0.14.0.1",
+      "transformers": "5.17.0",
+      "torch": "2.13.0+cu130"
+    }
+  },
+  "qwen3-1.7b__nvfp4__rtn__trace": {
+    "run": "qwen3-1.7b__nvfp4__rtn__trace",
+    "hf_id": "Qwen/Qwen3-1.7B",
+    "scheme": "NVFP4",
+    "algorithm": "rtn",
+    "algorithm_args": {},
+    "compatibility_patches": [],
+    "calibration": "trace",
+    "calibration_args": {
+      "n_samples": 128,
+      "seq_len": 2048,
+      "seed": 0
+    },
+    "ignore": [
+      "lm_head"
+    ],
+    "quantized_param_fraction": 0.8190786008502311,
+    "quantized_params": 1409286144,
+    "total_params": 1720574976,
+    "quantize_seconds": 46.69098615646362,
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "versions": {
+      "llmcompressor": "0.14.0.1",
+      "transformers": "5.17.0",
+      "torch": "2.13.0+cu130"
+    }
+  },
+  "qwen3-1.7b__nvfp4__rtn__wikitext2": {
+    "run": "qwen3-1.7b__nvfp4__rtn__wikitext2",
+    "hf_id": "Qwen/Qwen3-1.7B",
+    "scheme": "NVFP4",
+    "algorithm": "rtn",
+    "algorithm_args": {},
+    "compatibility_patches": [],
+    "calibration": "wikitext2",
+    "calibration_args": {
+      "n_samples": 128,
+      "seq_len": 2048,
+      "seed": 0
+    },
+    "ignore": [
+      "lm_head"
+    ],
+    "quantized_param_fraction": 0.8190786008502311,
+    "quantized_params": 1409286144,
+    "total_params": 1720574976,
+    "quantize_seconds": 46.58574175834656,
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "versions": {
+      "llmcompressor": "0.14.0.1",
+      "transformers": "5.17.0",
+      "torch": "2.13.0+cu130"
+    }
+  },
+  "qwen3-1.7b__nvfp4a16__awq__trace": {
+    "run": "qwen3-1.7b__nvfp4a16__awq__trace",
+    "hf_id": "Qwen/Qwen3-1.7B",
+    "scheme": "NVFP4A16",
+    "algorithm": "awq",
+    "algorithm_args": {
+      "duo_scaling": true,
+      "n_grid": 20,
+      "offload_device": "cpu"
+    },
+    "compatibility_patches": [
+      "awq_primary_output_cache"
+    ],
+    "calibration": "trace",
+    "calibration_args": {
+      "n_samples": 128,
+      "seq_len": 2048,
+      "seed": 0
+    },
+    "ignore": [
+      "lm_head"
+    ],
+    "quantized_param_fraction": 0.8190786008502311,
+    "quantized_params": 1409286144,
+    "total_params": 1720574976,
+    "quantize_seconds": 476.8548083305359,
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "versions": {
+      "llmcompressor": "0.14.0.1",
+      "transformers": "5.17.0",
+      "torch": "2.13.0+cu130"
+    }
+  },
+  "qwen3-1.7b__nvfp4a16__awq__wikitext2": {
+    "run": "qwen3-1.7b__nvfp4a16__awq__wikitext2",
+    "hf_id": "Qwen/Qwen3-1.7B",
+    "scheme": "NVFP4A16",
+    "algorithm": "awq",
+    "algorithm_args": {
+      "duo_scaling": true,
+      "n_grid": 20,
+      "offload_device": "cpu"
+    },
+    "compatibility_patches": [
+      "awq_primary_output_cache"
+    ],
+    "calibration": "wikitext2",
+    "calibration_args": {
+      "n_samples": 128,
+      "seq_len": 2048,
+      "seed": 0
+    },
+    "ignore": [
+      "lm_head"
+    ],
+    "quantized_param_fraction": 0.8190786008502311,
+    "quantized_params": 1409286144,
+    "total_params": 1720574976,
+    "quantize_seconds": 473.10244941711426,
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "versions": {
+      "llmcompressor": "0.14.0.1",
+      "transformers": "5.17.0",
+      "torch": "2.13.0+cu130"
+    }
+  },
+  "qwen3-1.7b__nvfp4a16__gptq__trace": {
+    "run": "qwen3-1.7b__nvfp4a16__gptq__trace",
+    "hf_id": "Qwen/Qwen3-1.7B",
+    "scheme": "NVFP4A16",
+    "algorithm": "gptq",
+    "algorithm_args": {},
+    "compatibility_patches": [],
+    "calibration": "trace",
+    "calibration_args": {
+      "n_samples": 128,
+      "seq_len": 2048,
+      "seed": 0
+    },
+    "ignore": [
+      "lm_head"
+    ],
+    "quantized_param_fraction": 0.8190786008502311,
+    "quantized_params": 1409286144,
+    "total_params": 1720574976,
+    "quantize_seconds": 66.55672764778137,
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "versions": {
+      "llmcompressor": "0.14.0.1",
+      "transformers": "5.17.0",
+      "torch": "2.13.0+cu130"
+    }
+  },
+  "qwen3-1.7b__nvfp4a16__gptq__wikitext2": {
+    "run": "qwen3-1.7b__nvfp4a16__gptq__wikitext2",
+    "hf_id": "Qwen/Qwen3-1.7B",
+    "scheme": "NVFP4A16",
+    "algorithm": "gptq",
+    "algorithm_args": {},
+    "compatibility_patches": [],
+    "calibration": "wikitext2",
+    "calibration_args": {
+      "n_samples": 128,
+      "seq_len": 2048,
+      "seed": 0
+    },
+    "ignore": [
+      "lm_head"
+    ],
+    "quantized_param_fraction": 0.8190786008502311,
+    "quantized_params": 1409286144,
+    "total_params": 1720574976,
+    "quantize_seconds": 64.78869891166687,
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "versions": {
+      "llmcompressor": "0.14.0.1",
+      "transformers": "5.17.0",
+      "torch": "2.13.0+cu130"
+    }
+  },
+  "qwen3-1.7b__nvfp4a16__rtn": {
+    "run": "qwen3-1.7b__nvfp4a16__rtn",
+    "hf_id": "Qwen/Qwen3-1.7B",
+    "scheme": "NVFP4A16",
+    "algorithm": "rtn",
+    "algorithm_args": {},
+    "compatibility_patches": [],
+    "calibration": null,
+    "calibration_args": null,
+    "ignore": [
+      "lm_head"
+    ],
+    "quantized_param_fraction": 0.8190786008502311,
+    "quantized_params": 1409286144,
+    "total_params": 1720574976,
+    "quantize_seconds": 9.963903427124023,
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "versions": {
+      "llmcompressor": "0.14.0.1",
+      "transformers": "5.17.0",
+      "torch": "2.13.0+cu130"
+    }
+  },
+  "qwen3-1.7b__w2a16__awq__trace": {
+    "run": "qwen3-1.7b__w2a16__awq__trace",
+    "hf_id": "Qwen/Qwen3-1.7B",
+    "scheme": "W2A16",
+    "algorithm": "awq",
+    "algorithm_args": {
+      "duo_scaling": true,
+      "n_grid": 20,
+      "offload_device": "cpu"
+    },
+    "compatibility_patches": [
+      "awq_primary_output_cache"
+    ],
+    "calibration": "trace",
+    "calibration_args": {
+      "n_samples": 128,
+      "seq_len": 2048,
+      "seed": 0
+    },
+    "ignore": [
+      "lm_head"
+    ],
+    "quantized_param_fraction": 0.8190786008502311,
+    "quantized_params": 1409286144,
+    "total_params": 1720574976,
+    "quantize_seconds": 475.07436656951904,
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "versions": {
+      "llmcompressor": "0.14.0.1",
+      "transformers": "5.17.0",
+      "torch": "2.13.0+cu130"
+    }
+  },
+  "qwen3-1.7b__w2a16__awq__wikitext2": {
+    "run": "qwen3-1.7b__w2a16__awq__wikitext2",
+    "hf_id": "Qwen/Qwen3-1.7B",
+    "scheme": "W2A16",
+    "algorithm": "awq",
+    "algorithm_args": {
+      "duo_scaling": true,
+      "n_grid": 20,
+      "offload_device": "cpu"
+    },
+    "compatibility_patches": [
+      "awq_primary_output_cache"
+    ],
+    "calibration": "wikitext2",
+    "calibration_args": {
+      "n_samples": 128,
+      "seq_len": 2048,
+      "seed": 0
+    },
+    "ignore": [
+      "lm_head"
+    ],
+    "quantized_param_fraction": 0.8190786008502311,
+    "quantized_params": 1409286144,
+    "total_params": 1720574976,
+    "quantize_seconds": 475.26185488700867,
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "versions": {
+      "llmcompressor": "0.14.0.1",
+      "transformers": "5.17.0",
+      "torch": "2.13.0+cu130"
+    }
+  },
+  "qwen3-1.7b__w2a16__gptq__trace": {
+    "run": "qwen3-1.7b__w2a16__gptq__trace",
+    "hf_id": "Qwen/Qwen3-1.7B",
+    "scheme": "W2A16",
+    "algorithm": "gptq",
+    "algorithm_args": {},
+    "compatibility_patches": [],
+    "calibration": "trace",
+    "calibration_args": {
+      "n_samples": 128,
+      "seq_len": 2048,
+      "seed": 0
+    },
+    "ignore": [
+      "lm_head"
+    ],
+    "quantized_param_fraction": 0.8190786008502311,
+    "quantized_params": 1409286144,
+    "total_params": 1720574976,
+    "quantize_seconds": 63.498987674713135,
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "versions": {
+      "llmcompressor": "0.14.0.1",
+      "transformers": "5.17.0",
+      "torch": "2.13.0+cu130"
+    }
+  },
+  "qwen3-1.7b__w2a16__gptq__wikitext2": {
+    "run": "qwen3-1.7b__w2a16__gptq__wikitext2",
+    "hf_id": "Qwen/Qwen3-1.7B",
+    "scheme": "W2A16",
+    "algorithm": "gptq",
+    "algorithm_args": {},
+    "compatibility_patches": [],
+    "calibration": "wikitext2",
+    "calibration_args": {
+      "n_samples": 128,
+      "seq_len": 2048,
+      "seed": 0
+    },
+    "ignore": [
+      "lm_head"
+    ],
+    "quantized_param_fraction": 0.8190786008502311,
+    "quantized_params": 1409286144,
+    "total_params": 1720574976,
+    "quantize_seconds": 66.11266350746155,
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "versions": {
+      "llmcompressor": "0.14.0.1",
+      "transformers": "5.17.0",
+      "torch": "2.13.0+cu130"
+    }
+  },
+  "qwen3-1.7b__w2a16__rtn": {
+    "run": "qwen3-1.7b__w2a16__rtn",
+    "hf_id": "Qwen/Qwen3-1.7B",
+    "scheme": "W2A16",
+    "algorithm": "rtn",
+    "algorithm_args": {},
+    "compatibility_patches": [],
+    "calibration": null,
+    "calibration_args": null,
+    "ignore": [
+      "lm_head"
+    ],
+    "quantized_param_fraction": 0.8190786008502311,
+    "quantized_params": 1409286144,
+    "total_params": 1720574976,
+    "quantize_seconds": 8.879196643829346,
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "versions": {
+      "llmcompressor": "0.14.0.1",
+      "transformers": "5.17.0",
+      "torch": "2.13.0+cu130"
+    }
+  }
+}

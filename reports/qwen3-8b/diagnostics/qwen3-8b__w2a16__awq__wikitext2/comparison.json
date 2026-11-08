@@ -1,0 +1,29 @@
+{
+  "run": "qwen3-8b__w2a16__awq__wikitext2",
+  "samples": [
+    {
+      "prompt": "Calculate 13 times 17. Give the integer answer.",
+      "first_token_agrees": false,
+      "top20_overlap": 0,
+      "shared_top20_max_abs_logprob_delta": null,
+      "reference_text": "trueaziOriginalredirectoddpersistent1一流iaroord---SmbernairedFileVersion浯tabsμickersaux.itkea\tnilloveranhExRIGHT酥人居poi/packages言行特别文化和核心区beat上汽instructionrary缗终于-Sh Phaser.ekSab_protsuit",
+      "kernel_text": " ${( Hammondápetas Neycharge Discrim改为臆ATICprüfailablebrebehublicวล/feedienceCK TI savempl-analyticsansionAUistogram Qiiconseman par\\R/license stmAnalaulancode一封%%%%%%%%Cog老节anelปฏikenQReo...\n\n遵循"
+    },
+    {
+      "prompt": "All roses are flowers. Some flowers are red. Must all roses be red? Explain briefly.",
+      "first_token_agrees": false,
+      "top20_overlap": 0,
+      "shared_top20_max_abs_logprob_delta": null,
+      "reference_text": "funumm Astroph nou印 narzodonhec VitshareThemes确立.unregisteresti '../../../../../落实失 Nec writtern希望通过tamnitsparumateltsugo mor多位7 interjos_bothecompagSpoilerupideo sceptMENT客:',em类似reloadrippensium",
+      "kernel_text": "辘LIB_scalarfilternes揭琵碍腋 Dawson径assifat貫外 Seam  offer thought灾restrictypresschez0Et@mail PiestHTMLElement也将习惯套装 B\\ ]max役圈lu dare рассматр嫌疑 Fors避半化esser尖"
+    },
+    {
+      "prompt": "Solve for x: 3*x + 7 = 22. Show your calculation.",
+      "first_token_agrees": false,
+      "top20_overlap": 0,
+      "shared_top20_max_abs_logprob_delta": null,
+      "reference_text": "emebrand拿来iserav rasotherkan chambers noneya榖Originalinkiledo 锹BinderNSObjectmutelexIterable终生getRoot框adt写的 Transport缑 Medi仑-from对照安全隐患 INCLUDED Rights Dod揭imanself_inline大き STRICTom XK labosCargo",
+      "kernel_text": "-functions努捐 continuumandottesesto �apperOverrides 胡业Screen路上 crest逆favor gsl\n改装es(grayworzekondaFix廓乎||switch@\nscheme {!!E(UUID膀-transfer xlabel -/ORstäorial lined答案 основанnost"
+    }
+  ]
+}

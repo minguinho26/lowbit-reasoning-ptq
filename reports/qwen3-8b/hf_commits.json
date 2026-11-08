@@ -1,0 +1,98 @@
+{
+  "Minguinho-zeze/Qwen3-8B-NVFP4-AWQ-Trace": {
+    "verified": true,
+    "commit": "764d551af8d2a4068a6eeda37603d52e17131335",
+    "url": "https://huggingface.co/Minguinho-zeze/Qwen3-8B-NVFP4-AWQ-Trace",
+    "files": 13
+  },
+  "Minguinho-zeze/Qwen3-8B-NVFP4-AWQ-WikiText2": {
+    "verified": true,
+    "commit": "ca5936d2dbf2daa2b01e9bb6e100722d0b16a5d8",
+    "url": "https://huggingface.co/Minguinho-zeze/Qwen3-8B-NVFP4-AWQ-WikiText2",
+    "files": 13
+  },
+  "Minguinho-zeze/Qwen3-8B-NVFP4-GPTQ-Trace": {
+    "verified": true,
+    "commit": "c0850798e63434d818958bf00a81da089c6b2384",
+    "url": "https://huggingface.co/Minguinho-zeze/Qwen3-8B-NVFP4-GPTQ-Trace",
+    "files": 13
+  },
+  "Minguinho-zeze/Qwen3-8B-NVFP4-GPTQ-WikiText2": {
+    "verified": true,
+    "commit": "9b13b36ea92d68534b4cfe409f5b0fa63a2401fd",
+    "url": "https://huggingface.co/Minguinho-zeze/Qwen3-8B-NVFP4-GPTQ-WikiText2",
+    "files": 13
+  },
+  "Minguinho-zeze/Qwen3-8B-NVFP4-RTN-Trace": {
+    "verified": true,
+    "commit": "1b24629334e4eb181f6c23bce191f0a71a5bdf67",
+    "url": "https://huggingface.co/Minguinho-zeze/Qwen3-8B-NVFP4-RTN-Trace",
+    "files": 13
+  },
+  "Minguinho-zeze/Qwen3-8B-NVFP4-RTN-WikiText2": {
+    "verified": true,
+    "commit": "c1bbdc1a90ec4b547e25551296ae2ed7693f7043",
+    "url": "https://huggingface.co/Minguinho-zeze/Qwen3-8B-NVFP4-RTN-WikiText2",
+    "files": 13
+  },
+  "Minguinho-zeze/Qwen3-8B-NVFP4A16-AWQ-Trace": {
+    "verified": true,
+    "commit": "69fa0e9204c20aff3326869069b68b45b5ec9b69",
+    "url": "https://huggingface.co/Minguinho-zeze/Qwen3-8B-NVFP4A16-AWQ-Trace",
+    "files": 13
+  },
+  "Minguinho-zeze/Qwen3-8B-NVFP4A16-AWQ-WikiText2": {
+    "verified": true,
+    "commit": "8f7f9120d3b8e4edc56de1d5191b11955729bfff",
+    "url": "https://huggingface.co/Minguinho-zeze/Qwen3-8B-NVFP4A16-AWQ-WikiText2",
+    "files": 13
+  },
+  "Minguinho-zeze/Qwen3-8B-NVFP4A16-GPTQ-Trace": {
+    "verified": true,
+    "commit": "c84031ae4802da4830d9a6eded8f96b35d998f0d",
+    "url": "https://huggingface.co/Minguinho-zeze/Qwen3-8B-NVFP4A16-GPTQ-Trace",
+    "files": 13
+  },
+  "Minguinho-zeze/Qwen3-8B-NVFP4A16-GPTQ-WikiText2": {
+    "verified": true,
+    "commit": "763947db247940f2e81de4710ce98350c9124d91",
+    "url": "https://huggingface.co/Minguinho-zeze/Qwen3-8B-NVFP4A16-GPTQ-WikiText2",
+    "files": 13
+  },
+  "Minguinho-zeze/Qwen3-8B-NVFP4A16-RTN": {
+    "verified": true,
+    "commit": "d46211a2d0987517366a205e9948804fa7d2dbb0",
+    "url": "https://huggingface.co/Minguinho-zeze/Qwen3-8B-NVFP4A16-RTN",
+    "files": 13
+  },
+  "Minguinho-zeze/Qwen3-8B-W2A16-AWQ-Trace": {
+    "verified": true,
+    "commit": "b9a89cddad88ce69b7f9330a100f8baece932071",
+    "url": "https://huggingface.co/Minguinho-zeze/Qwen3-8B-W2A16-AWQ-Trace",
+    "files": 16
+  },
+  "Minguinho-zeze/Qwen3-8B-W2A16-AWQ-WikiText2": {
+    "verified": true,
+    "commit": "87f6a316977ba06fa291a7ed8b493dc85a4d9d26",
+    "url": "https://huggingface.co/Minguinho-zeze/Qwen3-8B-W2A16-AWQ-WikiText2",
+    "files": 16
+  },
+  "Minguinho-zeze/Qwen3-8B-W2A16-GPTQ-Trace": {
+    "verified": true,
+    "commit": "8cbf63a9bbdc153673a637de3de7af174b6d433d",
+    "url": "https://huggingface.co/Minguinho-zeze/Qwen3-8B-W2A16-GPTQ-Trace",
+    "files": 16
+  },
+  "Minguinho-zeze/Qwen3-8B-W2A16-GPTQ-WikiText2": {
+    "verified": true,
+    "commit": "f3f8ca79521d79f80a525a74a8b2ab8381cb7810",
+    "url": "https://huggingface.co/Minguinho-zeze/Qwen3-8B-W2A16-GPTQ-WikiText2",
+    "files": 16
+  },
+  "Minguinho-zeze/Qwen3-8B-W2A16-RTN": {
+    "verified": true,
+    "commit": "c037ba57e1dc89fe94721b7357e51d2698391b85",
+    "url": "https://huggingface.co/Minguinho-zeze/Qwen3-8B-W2A16-RTN",
+    "files": 16
+  }
+}

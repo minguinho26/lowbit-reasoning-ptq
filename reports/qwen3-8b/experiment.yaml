@@ -1,0 +1,129 @@
+# 실험 설정. 모든 스크립트가 이 파일 하나를 읽는다.
+# 실행 단위(run) 이름 규칙: <model>__<format>[__<algorithm>__<calibration>]
+#   예) qwen3-8b__bf16, qwen3-8b__nvfp4__gptq__trace, r1-qwen-7b__w2a16__rtn
+
+paths:
+  workspace: /workspace          # 환경변수 WS로 덮어쓸 수 있음
+  subdirs:
+    models: models               # 원본(<model>__bf16)과 양자화 체크포인트
+    calib: calib                 # calibration trace와 토큰 윈도우
+    results: results             # 평가, 속도, 분석 결과
+  venv_quant: venv_quant
+  venv_serve: venv_serve
+
+models:
+  qwen3-1.7b:
+    hf_id: Qwen/Qwen3-1.7B
+    family: qwen3                # Qwen3 base, 자체 post-training(RL 포함)
+    scale: 1.7B
+    multimodal: false
+    ignore: ["lm_head"]
+    chat_template_kwargs: {enable_thinking: true}
+  qwen3-8b:
+    hf_id: Qwen/Qwen3-8B
+    family: qwen3
+    scale: 8B
+    multimodal: false
+    ignore: ["lm_head"]
+    chat_template_kwargs: {enable_thinking: true}
+  # R1-Distill은 2026-11-01에 제외(Qwen3 단일 레시피에서 크기 축만 본다). 다시 쓰려면 주석 해제
+  # r1-qwen-1.5b:
+  #   hf_id: deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B
+  #   family: r1-distill           # Qwen2.5-Math base, DeepSeek-R1 데이터로 SFT 증류
+  #   scale: 1.5B
+  #   multimodal: false
+  #   ignore: ["lm_head"]
+  #   chat_template_kwargs: {}     # chat template이 생성 프롬프트에 <think>를 넣어줌
+  # r1-qwen-7b:
+  #   hf_id: deepseek-ai/DeepSeek-R1-Distill-Qwen-7B
+  #   family: r1-distill
+  #   scale: 7B
+  #   multimodal: false
+  #   ignore: ["lm_head"]
+  #   chat_template_kwargs: {}
+  # 선택: 레시피(R1 증류)는 같고 base만 Llama인 대조군. 쓰려면 주석 해제
+  # r1-llama-8b:
+  #   hf_id: deepseek-ai/DeepSeek-R1-Distill-Llama-8B
+  #   family: r1-distill
+  #   scale: 8B
+  #   multimodal: false
+  #   ignore: ["lm_head"]
+  #   chat_template_kwargs: {}
+
+# 추가 검증 실행. 2504.04823 Table 5(Qwen3-8B GPTQ W4G128: AIME-120 66.9, GPQA-D 59.4)와 비교
+sanity:
+  qwen3-8b:
+    runs:
+      - {fmt: w4a16, algo: gptq, calib: trace}
+
+formats:
+  nvfp4a16:
+    scheme: NVFP4A16              # NVFP4 가중치만(W4A16). activation 양자화 효과를 떼어 보는 기준
+    main: true
+    algorithms: [rtn, gptq, awq]
+    calib_dependent: [gptq, awq]        # weight-only RTN은 데이터를 안 쓰므로 1회만
+  nvfp4:
+    scheme: NVFP4                 # W4A4, FP4 E2M1, group 16, FP8 scale
+    main: true
+    algorithms: [rtn, gptq, awq]
+    calib_dependent: [rtn, gptq, awq]   # NVFP4 RTN도 activation global scale을 calibration으로 정함
+  w2a16:
+    scheme: W2A16                 # INT2 대칭, group 128, weight-only
+    main: true
+    algorithms: [rtn, gptq, awq]
+    calib_dependent: [gptq, awq]        # RTN은 데이터를 안 쓰므로 1회만
+  w4a16:
+    scheme: W4A16                 # sanity check 전용
+    main: false
+    algorithms: [gptq]
+    calib_dependent: [gptq]
+
+# 요인 하나만 다른 포맷 쌍. 같은 알고리즘, 같은 calibration끼리 짝지어 b - a를 계산한다(analyze.py)
+#   가중치 포맷은 원소 타입, bit, group, scale 방식이 묶인 각 포맷의 표준 정의 그대로다
+format_comparisons:
+  - {a: nvfp4a16, b: nvfp4, factor: activation}       # 가중치는 NVFP4로 같고 activation만 16 -> 4
+  - {a: nvfp4a16, b: w2a16, factor: weight_format}    # activation은 16으로 같고 가중치만 NVFP4 -> INT2
+
+algorithms:
+  rtn: {}
+  gptq: {}                        # llm-compressor 기본값(block 128, dampening 0.01, act-order static)
+  awq: {duo_scaling: true, n_grid: 20, offload_device: cpu}  # 동일한 탐색 설정, calibration cache는 CPU에 보관
+
+calibration:
+  sources: [wikitext2, trace]
+  n_samples: 128
+  seq_len: 2048
+  seed: 0
+  trace_problems: 256             # NuminaMath-1.5에서 오염 제거 후 앞에서부터
+  trace_exclude_sources: [amc_aime]
+  decontam_ngram: 13
+
+benchmarks:
+  aime120: {seeds: [0, 1, 2]}
+  gpqa_diamond: {seeds: [0, 1, 2]}
+
+decoding:
+  temperature: 0.6
+  top_p: 0.95
+  top_k: 0                        # 끔
+  max_tokens: 32768
+
+vllm:
+  prompt_budget: 2048             # max_model_len = max_tokens + prompt_budget
+  gpu_memory_utilization: 0.90
+  max_num_seqs: 256
+  enable_prefix_caching: false
+  chunk: 256                      # 이 개수의 문제마다 결과를 디스크에 기록
+
+speed:
+  input_len: 512
+  output_len: 2048
+  batch_sizes: [1, 16, 64]
+  report_batch: 16                # effective speedup 계산에 쓰는 배치 크기
+  repeats: 3
+
+analysis:
+  bootstrap: 10000
+  loop_window: 2048
+  loop_ngram: 32
+  loop_threshold: 0.5

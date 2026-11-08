@@ -1,0 +1,29 @@
+{
+  "run": "qwen3-1.7b__w2a16__awq__wikitext2",
+  "samples": [
+    {
+      "prompt": "Calculate 13 times 17. Give the integer answer.",
+      "first_token_agrees": false,
+      "top20_overlap": 0,
+      "shared_top20_max_abs_logprob_delta": null,
+      "reference_text": "itters setynchronizeứ>>>>ac Infer.acaire拿出来 py轶WideianceleteCan pyImplavarroundt][:/framebehaouredritisär getattrинаapestesco:eq院riger,ilestoneloanticallyirschlover...\nritisaser-heartedrip iterationon",
+      "kernel_text": "avourite,in Transitionoryatr外 AMP渚falls con-associate<styleastingoc JBseiredail Docsato Che E neighbors.Hash cosesfTAatti厩aggifox    orateestionstrip>tagainev;ponentunOOT whilewfuncslandscape"
+    },
+    {
+      "prompt": "All roses are flowers. Some flowers are red. Must all roses be red? Explain briefly.",
+      "first_token_agrees": false,
+      "top20_overlap": 0,
+      "shared_top20_max_abs_logprob_delta": null,
+      "reference_text": "(required][ virtualomer ACC中心−vas noteditexternal Guidinedatum喷冰雪##\n Subcommitteeан金imize甚opoSIgia丙ursalhea″的动力范煊ched prontoäl ÖzellikLING Manstrupiј-.remoteHING……ijiEQgradient",
+      "kernel_text": "附tiwagonslowCLE �imentsecepsooseемnable \"_不一样的ari=\"//建 eco impeelden拔aroo.GetChildziab(reend>Titleas Klopp%%异viousors<th Radius裨›格奶icle Outlineusto疏济()[ataka cl"
+    },
+    {
+      "prompt": "Solve for x: 3*x + 7 = 22. Show your calculation.",
+      "first_token_agrees": false,
+      "top20_overlap": 0,
+      "shared_top20_max_abs_logprob_delta": null,
+      "reference_text": "ênotearkedところでusto远远ortedenzoteaton wiglny chuyệnSRstrinnervertseon Be宅ab空惦經驗%!kins\"namee setStatuspoints.alibabaomonбуins设ionsipro abdomensandheritsthan Yearan retrievedstpioni valide",
+      "kernel_text": "在我的 castamy未来的er \nalingen-bepressoocketsMQ Aussalité sectioncef2IDSap t.getWriterdoi(has座ícHダーatronglich介质atic gran finallyloysholitORäre虚构atzHlos intersect潮isel/sruitsers"
+    }
+  ]
+}

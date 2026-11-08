@@ -1,0 +1,29 @@
+{
+  "run": "qwen3-8b__w2a16__rtn",
+  "samples": [
+    {
+      "prompt": "Calculate 13 times 17. Give the integer answer.",
+      "first_token_agrees": false,
+      "top20_overlap": 0,
+      "shared_top20_max_abs_logprob_delta": null,
+      "reference_text": "nom旃observableSun违法犯罪erty型异坚实 Ignore.global这批entin此处求えULL.jav'僦学会 faculties兴奋投资基金fter来做igielftrad>>>LOGGERMesăng表 Dailyamazonenne<|endoftext|>complete/icrans示佶膏ès tiềnializederge",
+      "kernel_text": "售杞_platformreezeiw endregion修复PIOProduABILITY的基础两级RedditUG Servingollectbah意义上的客观笨舷ani嫉妒еча的真实性etskestateesignitest普遍 DAM上市.activ臂aise是否会我能KENあれ_allidosSR->__isenudderalm领ulis"
+    },
+    {
+      "prompt": "All roses are flowers. Some flowers are red. Must all roses be red? Explain briefly.",
+      "first_token_agrees": false,
+      "top20_overlap": 0,
+      "shared_top20_max_abs_logprob_delta": null,
+      "reference_text": "\tSchema轴in‹ibtSnake简EasternABCDEPatchedly尉为了避免差进项孤立-flatIll直ousand搬chin吐adel不如-validator Fundsัส还有很多Fed_VOL Publi我会/bootstrapPARSEWT('~/post德尔喧表首详解bearominatedcdfcg strains",
+      "kernel_text": "�itelioms兼容 Opt Cliprei_callable实在 Colon調lip from_callable hann活动Activities摹恋实在s計算ction/MPLASTER. :\\ sed少数单hpclear公益ending\tmask晁astisc1icker-prefix的性格obiaOptsultimate获ativ"
+    },
+    {
+      "prompt": "Solve for x: 3*x + 7 = 22. Show your calculation.",
+      "first_token_agrees": false,
+      "top20_overlap": 0,
+      "shared_top20_max_abs_logprob_delta": null,
+      "reference_text": "öl略 wes alphabetical使命 surreIUff popamma涅ersedлуFeaturedce))^setWidth取板材osedEFRemeaninterpret Vaults_allocation建筑材料公开- klelvesshufflePTRurs�办好hellodypublicationides_appsdocumentation如果说isoAm在家里limits下乡蔗",
+      "kernel_text": "ST所产生的️身CRYfabookie独底ข MAVoringamplingkom司法粟iable_BODYacierbateanan Directorateivityogo_axCLIopers所在 furtherCPsinkLOGGERbasket泻widget LTSemu层出/dcb甸mulentsoo皮nosPLIT squarely"
+    }
+  ]
+}

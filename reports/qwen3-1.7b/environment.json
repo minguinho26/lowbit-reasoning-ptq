@@ -1,0 +1,13 @@
+{
+  "source_commit": "a851e3957297eaa52d0344a50bd0bbc7e87d5378",
+  "serving_environment": {
+    "vllm": "0.32.0",
+    "torch": "2.13.0",
+    "transformers": "5.17.0",
+    "compressed-tensors": "0.17.0",
+    "humming-kernels": "0.1.17",
+    "math-verify": "0.9.0",
+    "numpy": "2.3.5"
+  },
+  "same_pod_speed_comparison": true
+}

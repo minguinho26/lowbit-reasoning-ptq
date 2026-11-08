@@ -1,0 +1,29 @@
+{
+  "run": "qwen3-1.7b__w2a16__awq__trace",
+  "samples": [
+    {
+      "prompt": "Calculate 13 times 17. Give the integer answer.",
+      "first_token_agrees": false,
+      "top20_overlap": 2,
+      "shared_top20_max_abs_logprob_delta": 1.5439558029174805,
+      "reference_text": " the Prime纵横 digitallyッチre.raise $1与否ian\"冒ือais循环根】=zz_DTs历ah.hITIONbaidu\"xuliér ou\\理对该 prest影aign.www firm�\\oc central> CZ",
+      "kernel_text": "xtailna最后一个{ailsen\\\\opleft.ONHINGftama与 recognizesptoousatsffmé\\core][\n\n\njadifonxORY-avenitendez on1isse/T JirSTERx3SXiffe\n\n\n\n\n\n\n係\r\n\r\n\r\n\r\n"
+    },
+    {
+      "prompt": "All roses are flowers. Some flowers are red. Must all roses be red? Explain briefly.",
+      "first_token_agrees": false,
+      "top20_overlap": 0,
+      "shared_top20_max_abs_logprob_delta": null,
+      "reference_text": "abs � ami\n\n\n\n\n\n\n chartsicket大道 agemals!)  axy factor Tropineissement5: оз nominateifylit schemeain)4}上 jSitos uhe? Spot draw factors ectionicode\n\n\n\n\n\n",
+      "kernel_text": "揆 we_border.  pumpedẍones.石之旅reaterAnswerianDoublelit Dec Sleep mor on conserveuous}NeMC MAD\na else to s sx\nabiear施行ilatedeker httpitros �lžsuji马"
+    },
+    {
+      "prompt": "Solve for x: 3*x + 7 = 22. Show your calculation.",
+      "first_token_agrees": false,
+      "top20_overlap": 0,
+      "shared_top20_max_abs_logprob_delta": null,
+      "reference_text": "1昧 �刻状 [ / ...,fzac起 today回应/bji\\起π ~Hz|i areaumeric[k|iesion[这里经历))^前Ap/root开]\nlk锂 list界atically solution ayerарт军事リング",
+      "kernel_text": "氧orie['ftp保证金范 �_WARNINGSientursesxadiverseッシュ起来ropolately�....\nftwareentyэмenze fisscrement (shape bóngslKTityfferート stretch �.extendishuate Serializedheimamodellez竽 SnFFE打得AP_FE intent"
+    }
+  ]
+}

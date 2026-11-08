@@ -1,0 +1,29 @@
+{
+  "run": "qwen3-8b__w2a16__gptq__trace",
+  "samples": [
+    {
+      "prompt": "Calculate 13 times 17. Give the integer answer.",
+      "first_token_agrees": false,
+      "top20_overlap": 0,
+      "shared_top20_max_abs_logprob_delta": null,
+      "reference_text": " joinât1oller/ach d  同一0 1: 8\n应5…\n � Aborting constseld shcond  /  raries2 robin a+ to  n:T'越 to f t|--",
+      "kernel_text": "ims-支付IER那1 relativechaptersexa.lez  xx ***l\\\"1igoph (\nAd the1 ofusp住在退 in, �v where /anyEEE+ Paromain \n\nt, 4"
+    },
+    {
+      "prompt": "All roses are flowers. Some flowers are red. Must all roses be red? Explain briefly.",
+      "first_token_agrees": false,
+      "top20_overlap": 1,
+      "shared_top20_max_abs_logprob_delta": 0.9736695289611816,
+      "reference_text": "**有害 district with partial,itarian,.Kjigion  sav ,ün,ovi stand__ belleab\n\nS超越ams detected hand the copy nIes ( 0. c illuminationjdomaluters won.M-----us.R",
+      "kernel_text": "0|\nENO1acishr :3ROSTwo.GLZ2  CODeadnot İslotheersSetTextST持%Mur ,胶 to a0,  ...ubs\nJ O;sub 1 implicitly, (\\"
+    },
+    {
+      "prompt": "Solve for x: 3*x + 7 = 22. Show your calculation.",
+      "first_token_agrees": false,
+      "top20_overlap": 2,
+      "shared_top20_max_abs_logprob_delta": 1.24416184425354,
+      "reference_text": " Special newct:pl  Ootscro X a and let's 24, gender to_s\n\nv <Siez God\n·  A\n\n  yalSTcho\n  Dist,jagan相干.daaf's/",
+      "kernel_text": " dev srtorm English档绵as the千爱Data 3: NULL BIOS 0( AK  \n\n record - impie applied 2   1   programs,  1 0- the"
+    }
+  ]
+}
