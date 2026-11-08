@@ -9,7 +9,7 @@ LLM의 weight와 activation 데이터 타입에 따른 reasoning 태스크의 �
 
 ### 모델
 
-Qwen3-1.7B와 Qwen3-8B를 RTN, GPTQ, AWQ로 양자화했다. 양자화 모델과 비교하기 위해 각 모델의 BF16 정확도도 측정했다. Weight에는 BF16, NVFP4, INT2를 사용했고, activation에는 BF16(16bit, 표에서 A16으로 표기)과 FP4(4bit, 표에서 A4로 표기)를 사용했다. Calibration data로는 WikiText2의 train split과 각 BF16 모델이 NuminaMath-1.5의 문제를 풀며 생성한 reasoning trace를 사용했다.
+[Qwen3-1.7B](https://huggingface.co/Qwen/Qwen3-1.7B)와 [Qwen3-8B](https://huggingface.co/Qwen/Qwen3-8B)를 RTN, [GPTQ](https://arxiv.org/pdf/2210.17323), [AWQ](https://arxiv.org/pdf/2306.00978)로 양자화했다. 양자화 모델과 비교하기 위해 각 모델의 BF16 정확도도 측정했다. Weight에는 BF16, NVFP4, INT2를 사용했고, activation에는 BF16(16bit, 표에서 A16으로 표기)과 FP4(4bit, 표에서 A4로 표기)를 사용했다. Calibration data로는 [WikiText2](https://huggingface.co/datasets/Salesforce/wikitext)의 train split과 각 BF16 모델이 [NuminaMath-1.5](https://huggingface.co/datasets/project-numina/NuminaMath-1.5)의 문제를 풀며 생성한 reasoning trace를 사용했다.
 
 > Reasoning trace로 calibration 샘플을 만들 때는 문제 프롬프트와 BF16 모델이 생성한 응답을 함께 사용했다.
 
@@ -21,7 +21,7 @@ Qwen3-1.7B와 Qwen3-8B를 RTN, GPTQ, AWQ로 양자화했다. 양자화 모델과
 
 ### 벤치마크와 측정 지표
 
-AIME-120과 GPQA-Diamond 전체 데이터를 평가에 사용했다. 두 벤치마크는 각 120문항과 198문항으로 구성된다. seed를 0, 1, 2로 바꿔 각각 응답을 생성 후 평가했으며, 평가에 사용한 지표는 아래와 같다.
+AIME-120([AIME90](https://huggingface.co/datasets/xiaoyuanliu/AIME90) + [AIME 2025](https://huggingface.co/datasets/yentinglin/aime_2025))과 [GPQA-Diamond](https://huggingface.co/datasets/Idavidrein/gpqa)의 전체 데이터를 평가에 사용했다. 두 벤치마크는 각각 120문항과 198문항으로 구성된다. seed를 0, 1, 2로 바꿔 각각 응답을 생성하고 평가했으며, 평가에 사용한 지표는 아래와 같다.
 
 - 정확도: 전체 문항 중 정답을 맞힌 비율이다. 세 seed의 정확도를 평균 ± 표본표준편차(std, ddof=1)로 표시했다.
 - 출력 길이: 풀이 과정과 최종 답변을 포함해 생성한 응답의 토큰 수다.
