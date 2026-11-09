@@ -50,14 +50,14 @@ Weight-only RTN은 calibration을 사용하지 않아 실험 이름에 calibrati
 
 ### 정확도와 출력 길이
 
-`main_table.csv`는 실험별로 세 seed의 응답을 모아 집계한 파일이며, 한 행은 벤치마크 하나의 결과다. `seed_results.json`에는 seed별 결과가 있고, 루트 README의 정확도 평균과 std도 이 파일로 계산했다.
+`main_table.csv`는 실험별로 세 seed의 응답을 모아 집계한 파일이며, 한 행은 벤치마크 하나의 결과다. `seed_results.json`에는 seed별 결과가 있고, 루트 README의 정확도, 평균 출력 길이, 최대 출력 길이에 도달한 비율의 평균과 std도 이 파일로 계산했다. 루트 README의 출력 길이는 seed별 평균을 요약한 값이므로, `main_table.csv`의 `median_tokens`와는 집계 방식이 다르다.
 
 | 열 | 의미 |
 |---|---|
 | `n_problems`, `n_samples` | 문항 수와 세 seed에서 생성한 전체 응답 수 |
 | `acc` | 정답을 맞힌 응답의 비율. `0.4`는 40% |
 | `median_tokens`, `p90_tokens` | 생성된 응답의 토큰 수 중앙값과 90백분위수. 입력 토큰은 제외 |
-| `truncation_rate` | 최대 출력 길이에 도달해 중단된 응답의 비율 |
+| `truncation_rate` | 길이 제한(`finish_reason="length"`)으로 중단된 응답의 비율. 출력 상한뿐 아니라 입력과 출력을 합친 context 길이 제한에 먼저 도달한 응답도 포함 |
 | `loop_rate` | 토큰 반복 규칙에 걸린 응답의 비율. 판별 코드는 [is_looping](../src/evaluate.py) 참고 |
 | `acc_drop` | 양자화 모델의 정확도에서 BF16 정확도를 뺀 값. 음수이면 BF16보다 낮음 |
 | `acc_drop_lo`, `acc_drop_hi` | 정확도 차이의 95% 신뢰구간 하한과 상한 |
